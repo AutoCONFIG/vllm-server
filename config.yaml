@@ -17,6 +17,9 @@ model:
   # 量化类型: fp8, int8, int4, awq, gptq, bitsandbytes, compressed-tensors, quark 等
   # 如果模型本身是量化的（如 FP8 权重），建议使用 "auto" 或不设置
   quantization: null
+  # KV Cache 数据类型: auto, fp8, fp8_e4m3, fp8_e5m2, bfloat16
+  # FP8 量化可额外节省 30-50% KV Cache 显存
+  kv_cache_dtype: null
 
 engine:
   # GPU显存利用率 (0-1)（必需）
@@ -27,9 +30,9 @@ engine:
   gpu_ids: "2,6"
   
   # 最大模型长度
-  max_model_len: 262144
+  max_model_len: 8192
   # 最大并发序列数
-  max_num_seqs: 64
+  max_num_seqs: 32
   # 张量并行大小，根据gpu_ids数量自动设置（留空则自动）
   # 单独配置则使用指定值
   tensor_parallel_size: null

@@ -28,6 +28,10 @@ class ModelConfig(BaseModel):
         default=None,
         description="量化类型: fp8, int8, int4, awq, gptq, bitsandbytes 等"
     )
+    kv_cache_dtype: Optional[str] = Field(
+        default=None,
+        description="KV Cache 数据类型: auto, fp8, fp8_e4m3, fp8_e5m2, bfloat16"
+    )
 
 
 class EngineConfig(BaseModel):

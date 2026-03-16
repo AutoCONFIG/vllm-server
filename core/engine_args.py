@@ -28,6 +28,7 @@ def build_engine_args(
         "model": model_cfg.path,
         "dtype": model_cfg.dtype,
         "quantization": model_cfg.quantization,
+        "kv_cache_dtype": model_cfg.kv_cache_dtype,
         
         # 显存配置
         "gpu_memory_utilization": engine_cfg.gpu_memory_utilization,
