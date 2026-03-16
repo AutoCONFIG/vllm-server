@@ -1,0 +1,42 @@
+# Git
+.git
+.gitignore
+
+# Documentation
+*.md
+docs/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.env
+.venv/
+venv/
+ENV/
+
+# Logs
+logs/
+*.log
+
+# Docker (avoid recursive copy)
+docker/docker-bake.custom.hcl
+
+# Test files
+tests/
+test_*.py
+*_test.py
+
+# Misc
+.DS_Store
+Thumbs.db
+*.bak
+*.tmp

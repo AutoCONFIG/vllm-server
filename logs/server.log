@@ -1,0 +1,10 @@
+2026-03-13 10:34:39 - uvicorn.error - INFO - Application startup complete.
+2026-03-13 10:34:39 - uvicorn.error - INFO - Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+2026-03-13 10:34:42 - uvicorn.access - INFO - 10.0.43.119:40384 - "POST /v1/chat/completions HTTP/1.1" 200
+2026-03-13 10:34:42 - uvicorn.access - INFO - 10.0.43.119:40384 - "POST /v1/chat/completions HTTP/1.1" 200
+2026-03-13 10:35:14 - uvicorn.access - INFO - 10.0.43.119:47421 - "POST /v1/chat/completions HTTP/1.1" 200
+2026-03-13 10:35:14 - uvicorn.access - INFO - 10.0.43.119:47421 - "POST /v1/chat/completions HTTP/1.1" 200
+2026-03-13 10:35:33 - uvicorn.access - INFO - 10.0.43.119:59878 - "POST /v1/chat/completions HTTP/1.1" 200
+2026-03-13 10:35:33 - uvicorn.access - INFO - 10.0.43.119:59878 - "POST /v1/chat/completions HTTP/1.1" 200
+2026-03-13 10:35:49 - uvicorn.access - INFO - 10.0.43.119:42785 - "POST /v1/chat/completions HTTP/1.1" 200
+2026-03-13 10:35:49 - uvicorn.access - INFO - 10.0.43.119:42785 - "POST /v1/chat/completions HTTP/1.1" 200

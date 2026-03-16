@@ -1,0 +1,156 @@
+# =============================================================================
+# vLLM Engine Server - Docker构建工作流 (离线部署版)
+# =============================================================================
+#
+# 触发条件:
+#   - push到main/master分支
+#   - 创建tag (v*)
+#   - 手动触发
+#
+# 输出:
+#   - 镜像tar文件，可从Actions Artifacts下载
+#   - 离线导入: docker load -i vllm-engine-server.tar
+# =============================================================================
+
+name: Build Docker Image
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      vllm_version:
+        description: 'vLLM base image tag (e.g., v0.11.0, latest)'
+        required: false
+        default: 'latest'
+
+env:
+  IMAGE_NAME: vllm-engine-server
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # -------------------------------------------------------------
+      # 检出代码
+      # -------------------------------------------------------------
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # -------------------------------------------------------------
+      # 设置Docker Buildx
+      # -------------------------------------------------------------
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # -------------------------------------------------------------
+      # 确定版本号
+      # -------------------------------------------------------------
+      - name: Determine version
+        id: version
+        run: |
+          if [[ $GITHUB_REF == refs/tags/v* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/v}
+          elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="custom-$(date +%Y%m%d)"
+          else
+            VERSION="$(date +%Y%m%d)-${GITHUB_SHA:0:7}"
+          fi
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "Version: ${VERSION}"
+
+      # -------------------------------------------------------------
+      # 确定vLLM基础镜像
+      # -------------------------------------------------------------
+      - name: Determine vLLM image
+        id: vllm
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ github.event.inputs.vllm_version }}" ]; then
+            VLLM_TAG="${{ github.event.inputs.vllm_version }}"
+          else
+            VLLM_TAG="latest"
+          fi
+          echo "vllm_tag=${VLLM_TAG}" >> $GITHUB_OUTPUT
+          echo "Using vLLM image: vllm/vllm-openai:${VLLM_TAG}"
+
+      # -------------------------------------------------------------
+      # 构建Docker镜像
+      # -------------------------------------------------------------
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./docker/Dockerfile.custom
+          push: false
+          tags: |
+            ${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}
+            ${{ env.IMAGE_NAME }}:latest
+          build-args: |
+            VLLM_IMAGE=vllm/vllm-openai:${{ steps.vllm.outputs.vllm_tag }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # -------------------------------------------------------------
+      # 导出镜像为tar文件
+      # -------------------------------------------------------------
+      - name: Export Docker image
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          TAR_FILE="${{ env.IMAGE_NAME }}-${VERSION}.tar"
+          
+          echo "Exporting image to ${TAR_FILE}..."
+          docker save -o ${TAR_FILE} ${{ env.IMAGE_NAME }}:${VERSION}
+          
+          # 压缩
+          echo "Compressing..."
+          gzip ${TAR_FILE}
+          
+          # 显示文件信息
+          ls -lh ${TAR_FILE}.gz
+          
+          # 计算sha256
+          sha256sum ${TAR_FILE}.gz > ${TAR_FILE}.gz.sha256
+
+      # -------------------------------------------------------------
+      # 上传Artifacts (保留7天)
+      # -------------------------------------------------------------
+      - name: Upload image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-image-${{ steps.version.outputs.version }}
+          path: |
+            ${{ env.IMAGE_NAME }}-${{ steps.version.outputs.version }}.tar.gz
+            ${{ env.IMAGE_NAME }}-${{ steps.version.outputs.version }}.tar.gz.sha256
+          retention-days: 7
+
+      # -------------------------------------------------------------
+      # 输出摘要
+      # -------------------------------------------------------------
+      - name: Summary
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          TAR_FILE="${{ env.IMAGE_NAME }}-${VERSION}.tar.gz"
+          
+          echo "### Build Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Item | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Image | \`${{ env.IMAGE_NAME }}:${VERSION}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| vLLM Base | \`vllm/vllm-openai:${{ steps.vllm.outputs.vllm_tag }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| File | \`${TAR_FILE}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Size | \`$(ls -lh ${TAR_FILE} | awk '{print $5}')\` |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "#### Download" >> $GITHUB_STEP_SUMMARY
+          echo "1. Go to **Actions** → this workflow run" >> $GITHUB_STEP_SUMMARY
+          echo "2. Download artifact \`docker-image-${VERSION}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "#### Import on target machine" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
+          echo "gunzip ${TAR_FILE}" >> $GITHUB_STEP_SUMMARY
+          echo "docker load -i ${TAR_FILE/.gz/}" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY

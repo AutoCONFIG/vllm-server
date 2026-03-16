@@ -1,0 +1,71 @@
+# =============================================================================
+# vLLM Engine Server Dockerfile
+# =============================================================================
+# 基于vLLM官方镜像，添加项目代码
+#
+# 构建示例:
+#   docker build -t vllm-engine-server:latest -f docker/Dockerfile .
+#
+# 运行示例:
+#   docker run --gpus all -p 8000:8000 -v /path/to/model:/model vllm-engine-server:latest
+# =============================================================================
+
+# 使用vLLM官方OpenAI兼容服务器镜像
+# 参考: https://hub.docker.com/r/vllm/vllm-openai
+ARG VLLM_IMAGE=vllm/vllm-openai:latest
+FROM ${VLLM_IMAGE}
+
+# 工作目录
+WORKDIR /app
+
+# =============================================================================
+# 安装额外依赖
+# =============================================================================
+RUN pip install --no-cache-dir \
+    pydantic-settings \
+    pyyaml \
+    python-multipart \
+    requests
+
+# =============================================================================
+# 复制项目代码
+# =============================================================================
+COPY config.example.yaml /app/config.example.yaml
+COPY config.yaml /app/config.yaml
+COPY server.py /app/server.py
+COPY start_server.sh /app/start_server.sh
+COPY config/ /app/config/
+COPY core/ /app/core/
+COPY api/ /app/api/
+COPY services/ /app/services/
+COPY multimodal/ /app/multimodal/
+COPY utils/ /app/utils/
+
+# 创建日志目录
+RUN mkdir -p /app/logs
+
+# 设置脚本执行权限
+RUN chmod +x /app/start_server.sh
+
+# =============================================================================
+# 环境变量
+# =============================================================================
+ENV VLLM_USAGE_SOURCE=production-docker-image
+ENV OMP_NUM_THREADS=8
+
+# =============================================================================
+# 健康检查
+# =============================================================================
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5m --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+# =============================================================================
+# 暴露端口
+# =============================================================================
+EXPOSE 8000
+
+# =============================================================================
+# 入口点 - 使用模块化版本
+# =============================================================================
+ENTRYPOINT ["python3", "server.py"]
+CMD ["--config", "/app/config.yaml"]

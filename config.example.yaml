@@ -1,0 +1,64 @@
+# vLLM Engine Server 配置示例
+#
+# 复制此文件为 config.yaml 并修改实际值
+
+server:
+  host: "0.0.0.0"
+  port: 8000
+  title: "vLLM Engine Server"
+  version: "1.0.0"
+  description: "vLLM Engine 服务器，支持多卡并行和多模态输入"
+
+model:
+  # 模型路径（必需）
+  path: "/data2/kaiyun/qwen/model"
+  # 数据类型: bfloat16, float16, float32, int8, uint8
+  dtype: "bfloat16"
+
+engine:
+  # GPU显存利用率 (0-1)（必需）
+  gpu_memory_utilization: 0.95
+  # 最大模型长度
+  max_model_len: 8192
+  # 最大并发序列数
+  max_num_seqs: 64
+  # 张量并行大小 (每个节点的GPU数)
+  tensor_parallel_size: 1
+  # 流水线并行大小 (节点数)
+  pipeline_parallel_size: 1
+  # 数据并行大小 (需要Ray后端)
+  data_parallel_size: 1
+  # 分布式执行后端: mp(multiprocessing) 或 ray
+  distributed_executor_backend: "mp"
+  # 启用分块预填充
+  enable_chunked_prefill: true
+  # 启用前缀缓存
+  enable_prefix_caching: true
+  # 调度策略: fcfs 或 lpm
+  scheduling_policy: "fcfs"
+  # 随机种子
+  seed: 42
+  # 禁用自定义all-reduce
+  disable_custom_all_reduce: true
+
+multimodal:
+  # 限制每个提示的多模态数量
+  # 格式: {"image": 数量, "video": 数量}
+  limit_mm_per_prompt:
+    image: 4
+    video: 2
+
+logging:
+  # 日志级别: DEBUG, INFO, WARNING, ERROR
+  level: "INFO"
+  # 记录所有API请求
+  log_requests: false
+  # 日志目录
+  log_dir: "logs"
+  # 请求日志文件名
+  request_log_file: "api_requests.log"
+  # 服务器日志文件名
+  server_log_file: "server.log"
+
+# 实验性功能
+disable_prefix_caching: false
