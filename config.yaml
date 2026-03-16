@@ -43,6 +43,8 @@ engine:
   distributed_executor_backend: "mp"
   # 启用分块预填充
   enable_chunked_prefill: true
+  # 分块预填充的最大 batch token 数，必须能被 tensor_parallel_size 整除
+  max_num_batched_tokens: 8190
   # 启用前缀缓存
   enable_prefix_caching: true
   # 调度策略: fcfs 或 lpm

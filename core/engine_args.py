@@ -37,6 +37,7 @@ def build_engine_args(
         
         # 性能优化
         "enable_chunked_prefill": engine_cfg.enable_chunked_prefill,
+        "max_num_batched_tokens": engine_cfg.max_num_batched_tokens,
         "enable_prefix_caching": engine_cfg.enable_prefix_caching and not config.disable_prefix_caching,
         
         # 调度配置

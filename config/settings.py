@@ -48,6 +48,10 @@ class EngineConfig(BaseModel):
     data_parallel_size: Optional[int] = None
     distributed_executor_backend: Optional[str] = None
     enable_chunked_prefill: Optional[bool] = None
+    max_num_batched_tokens: Optional[int] = Field(
+        default=None,
+        description="分块预填充的最大batch token数，必须能被tensor_parallel_size整除"
+    )
     enable_prefix_caching: Optional[bool] = None
     seed: Optional[int] = None
     disable_custom_all_reduce: Optional[bool] = None
