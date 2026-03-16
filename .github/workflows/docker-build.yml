@@ -33,7 +33,7 @@ env:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest-4-cores
 
     steps:
       # -------------------------------------------------------------
@@ -103,7 +103,7 @@ jobs:
           echo "Using vLLM image: vllm/vllm-openai:${VLLM_TAG}"
 
       # -------------------------------------------------------------
-      # 构建Docker镜像
+      # 构建Docker镜像 (不使用缓存)
       # -------------------------------------------------------------
       - name: Build Docker image
         uses: docker/build-push-action@v5
@@ -116,8 +116,7 @@ jobs:
             ${{ env.IMAGE_NAME }}:latest
           build-args: |
             VLLM_IMAGE=vllm/vllm-openai:${{ steps.vllm.outputs.vllm_tag }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=min
+          no-cache: true
           
       # -------------------------------------------------------------
       # 构建后清理 (只清理构建缓存，不删除镜像)
