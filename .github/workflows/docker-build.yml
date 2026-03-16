@@ -120,13 +120,15 @@ jobs:
           cache-to: type=gha,mode=min
           
       # -------------------------------------------------------------
-      # 构建后清理
+      # 构建后清理 (只清理构建缓存，不删除镜像)
       # -------------------------------------------------------------
-      - name: Clean up after build
+      - name: Clean up build cache
         run: |
-          echo "=== Cleaning up Docker build cache ==="
+          echo "=== Checking Docker images ==="
+          docker images
+          
+          echo "=== Cleaning up Docker build cache only ==="
           docker builder prune -af || true
-          docker system prune -af --volumes || true
           
           echo "=== Final disk space ==="
           df -h
@@ -138,6 +140,11 @@ jobs:
         run: |
           VERSION="${{ steps.version.outputs.version }}"
           TAR_FILE="${{ env.IMAGE_NAME }}-${VERSION}.tar"
+          
+          # 验证镜像是否存在
+          echo "=== Checking if image exists ==="
+          docker images | grep "${{ env.IMAGE_NAME }}" || echo "Image not found, listing all images:"
+          docker images
           
           echo "Exporting image to ${TAR_FILE}..."
           docker save -o ${TAR_FILE} ${{ env.IMAGE_NAME }}:${VERSION}
@@ -151,15 +158,6 @@ jobs:
           
           # 计算sha256
           sha256sum ${TAR_FILE}.gz > ${TAR_FILE}.gz.sha256
-          
-          # 清理docker镜像以释放空间
-          echo "=== Cleaning up Docker image from disk ==="
-          docker rmi ${{ env.IMAGE_NAME }}:${VERSION} || true
-          docker rmi ${{ env.IMAGE_NAME }}:latest || true
-          docker system prune -af --volumes || true
-          
-          echo "=== Final disk space ==="
-          df -h
 
       # -------------------------------------------------------------
       # 上传Artifacts (保留7天)
