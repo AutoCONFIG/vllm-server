@@ -12,8 +12,11 @@ server:
 model:
   # 模型路径（必需）
   path: "/data2/kaiyun/qwen/model"
-  # 数据类型: bfloat16, float16, float32, int8, uint8
+  # 数据类型: auto, float16, bfloat16, float32
   dtype: "bfloat16"
+  # 量化类型: fp8, int8, int4, awq, gptq, bitsandbytes, compressed-tensors, quark 等
+  # 如果模型本身是量化的（如 FP8 权重），建议使用 "auto" 或不设置
+  quantization: null
 
 engine:
   # GPU显存利用率 (0-1)（必需）

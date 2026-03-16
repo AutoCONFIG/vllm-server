@@ -20,7 +20,14 @@ class ServerConfig(BaseModel):
 class ModelConfig(BaseModel):
     """模型配置"""
     path: Optional[str] = None
-    dtype: Optional[str] = None
+    dtype: Optional[str] = Field(
+        default=None,
+        description="数据类型: auto, float16, bfloat16, float32"
+    )
+    quantization: Optional[str] = Field(
+        default=None,
+        description="量化类型: fp8, int8, int4, awq, gptq, bitsandbytes 等"
+    )
 
 
 class EngineConfig(BaseModel):
