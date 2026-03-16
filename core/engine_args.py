@@ -33,6 +33,7 @@ def build_engine_args(
         # 显存配置
         "gpu_memory_utilization": engine_cfg.gpu_memory_utilization,
         "max_model_len": engine_cfg.max_model_len,
+        "block_size": engine_cfg.block_size,
         "max_num_seqs": engine_cfg.max_num_seqs,
         
         # 性能优化

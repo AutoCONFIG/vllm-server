@@ -42,6 +42,10 @@ class EngineConfig(BaseModel):
         description="GPU编号，如 '0' 或 '0,1,2,3'"
     )
     max_model_len: Optional[int] = None
+    block_size: Optional[int] = Field(
+        default=None,
+        description="KV cache block大小，必须能被tensor_parallel_size整除"
+    )
     max_num_seqs: Optional[int] = None
     tensor_parallel_size: Optional[int] = None
     pipeline_parallel_size: Optional[int] = None
