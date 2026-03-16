@@ -30,11 +30,11 @@ engine:
   gpu_ids: "2,3,4,5,6"
 
   # 最大模型长度，必须能被 tensor_parallel_size 整除
-  max_model_len: 32768
+  max_model_len: 40960
   # KV cache block 大小，必须能被 tensor_parallel_size 整除
-  block_size: 8190
+  block_size: 10240
   # 最大并发序列数
-  max_num_seqs: 32
+  max_num_seqs: 64
   # 张量并行大小，根据gpu_ids数量自动设置（留空则自动）
   # 单独配置则使用指定值
   tensor_parallel_size: null
