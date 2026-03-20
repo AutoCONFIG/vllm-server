@@ -75,7 +75,7 @@ engine:
   # 推荐值: 0.80 - 0.95
   # 默认: 0.90
   # 说明: 参考docs/vllm/docs/configuration/optimization.md
-  gpu_memory_utilization: 0.80
+  gpu_memory_utilization: 0.90
   
   # 使用的GPU编号
   # 可选值:
@@ -88,7 +88,7 @@ engine:
   # 可选值: 正整数
   # 推荐值: 根据模型实际需求设置
   # 默认: 模型配置最大值
-  max_model_len: 32768
+  max_model_len: 65536
   
   # KV Cache block大小
   # 可选值: 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384
