@@ -77,7 +77,7 @@ engine:
   # 推荐值: 0.80 - 0.95
   # 默认: 0.80
   # 说明: 提高此值可提升推理性能
-  gpu_memory_utilization: 0.85
+  gpu_memory_utilization: 0.80
   
   # 使用的GPU编号
   # 可选值:
@@ -98,13 +98,13 @@ engine:
   # 必须能被tensor_parallel_size整除
   # 默认: 16 (参考docs/vllm/docs/usage/usage_stats.md)
   # 说明: 大block管理开销小但显存利用率可能低
-  block_size: 128
+  block_size: 32
   
   # 最大并发序列数
   # 可选值: 正整数
   # 默认: 256
   # 说明: 提高此值可提升吞吐量
-  max_num_seqs: 256
+  max_num_seqs: 128
   
   # 张量并行大小 (Tensor Parallelism, TP)
   # 可选值: 1 - GPU数量
