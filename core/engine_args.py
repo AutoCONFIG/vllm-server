@@ -72,10 +72,10 @@ def print_engine_config(config: Any) -> None:
     Args:
         config: 配置对象
     """
-    print("🚀 正在初始化vLLM AsyncLLMEngine...")
-    print(f"📁 模型路径: {config.model.path}")
-    print(f"🎯 GPU利用率: {config.engine.gpu_memory_utilization}")
-    print(f"📝 最大长度: {config.engine.max_model_len}")
+    print("[INFO] Initializing vLLM AsyncLLMEngine...")
+    print(f"[INFO] Model: {config.model.path}")
+    print(f"[INFO] GPU memory utilization: {config.engine.gpu_memory_utilization}")
+    print(f"[INFO] Max model length: {config.engine.max_model_len}")
     
     # 多卡并行信息
     total_gpus = (
@@ -84,20 +84,16 @@ def print_engine_config(config: Any) -> None:
         config.engine.data_parallel_size
     )
     if total_gpus > 1:
-        print(f"🖥️  多卡配置: TP={config.engine.tensor_parallel_size}, "
+        print(f"[INFO] Parallel config: TP={config.engine.tensor_parallel_size}, "
               f"PP={config.engine.pipeline_parallel_size}, "
               f"DP={config.engine.data_parallel_size}")
-        print(f"🖥️  总GPU数: {total_gpus}")
-        print(f"🔧 分布式后端: {config.engine.distributed_executor_backend}")
+        print(f"[INFO] Total GPUs: {total_gpus}")
+        print(f"[INFO] Distributed executor: {config.engine.distributed_executor_backend}")
     
     # 注意力后端信息
     if config.engine.attention_backend:
-        print(f"⚡ 注意力后端: {config.engine.attention_backend}")
+        print(f"[INFO] Attention backend: {config.engine.attention_backend}")
     
     # 多模态信息
     if config.multimodal.limit_mm_per_prompt is not None:
-        print(f"🖼️  多模态限制: {config.multimodal.limit_mm_per_prompt}")
-    
-    # 前缀缓存配置信息
-    if config.disable_prefix_caching:
-        print(f"⚙️  前缀缓存已禁用（避免Mamba警告）")
+        print(f"[INFO] Multimodal limits: {config.multimodal.limit_mm_per_prompt}")

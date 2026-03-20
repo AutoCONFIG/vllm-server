@@ -49,7 +49,7 @@ def load_config(
             # 如果显式指定了YAML文件但不存在，则报错
             raise
         # 否则继续使用环境变量和默认值
-        print("⚠️  配置文件未找到，使用环境变量和默认值")
+        print("[WARN] Config file not found, using env vars and defaults")
     
     # 创建Settings对象（会自动处理环境变量）
     if yaml_loaded:
@@ -114,8 +114,8 @@ def _load_yaml_file(yaml_path: str) -> Dict[str, Any]:
     try:
         import yaml
     except ImportError:
-        print("⚠️  YAML库未安装，尝试安装: pip install pyyaml")
-        raise ImportError("需要安装PyYAML库: pip install pyyaml")
+        print("[WARN] PyYAML not installed, trying to install: pip install pyyaml")
+        raise ImportError("PyYAML required: pip install pyyaml")
     
     with open(yaml_path, 'r', encoding='utf-8') as f:
         try:
@@ -134,4 +134,4 @@ def ensure_log_directory(settings: Settings) -> None:
     log_dir = settings.logging.log_dir
     if log_dir and not os.path.exists(log_dir):
         os.makedirs(log_dir, exist_ok=True)
-        print(f"📁 创建日志目录: {log_dir}")
+        print(f"[INFO] Created log directory: {log_dir}")

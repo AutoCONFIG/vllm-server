@@ -43,7 +43,7 @@ class EngineManager:
             RuntimeError: 如果Engine已经初始化
         """
         if self._engine is not None:
-            print("⚠️  Engine已经初始化，跳过")
+            print("[WARN] Engine already initialized, skipping")
             return
         
         from .engine_args import print_engine_config
@@ -55,10 +55,10 @@ class EngineManager:
         self._engine = AsyncLLMEngine.from_engine_args(engine_args)
         self._config = config
         
-        print("⏳ 等待模型加载完成...")
+        print("[INFO] Waiting for model to load...")
         # 等待EngineCore准备就绪
         await asyncio.sleep(2)
-        print("✅ Engine初始化完成!")
+        print("[INFO] Engine initialized")
     
     @property
     def engine(self) -> AsyncLLMEngine:
@@ -90,11 +90,11 @@ class EngineManager:
         关闭Engine
         """
         if self._engine is not None:
-            print("🛑 正在关闭Engine...")
+            print("[INFO] Shutting down engine...")
             await self._engine.shutdown()
             self._engine = None
             self._config = None
-            print("✅ Engine已关闭")
+            print("[INFO] Engine shutdown complete")
     
     def is_initialized(self) -> bool:
         """

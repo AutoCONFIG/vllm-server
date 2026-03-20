@@ -39,7 +39,7 @@ def validate_gpu_config(
     # 检查数据并行是否需要Ray后端
     total_gpus = tensor_parallel_size * pipeline_parallel_size * data_parallel_size
     if total_gpus > 1 and data_parallel_size > 1 and distributed_executor_backend != "ray":
-        print("⚠️  警告: 数据并行需要使用 ray 后端，自动切换")
+        print("[WARN] Data parallelism requires ray backend, auto-switching")
         distributed_executor_backend = "ray"
     
     # 检查CUDA_VISIBLE_DEVICES
@@ -48,8 +48,8 @@ def validate_gpu_config(
         device_count = len(cuda_devices.split(","))
         total_required = tensor_parallel_size * pipeline_parallel_size
         if device_count < total_required:
-            print(f"⚠️  警告: CUDA_VISIBLE_DEVICES 指定了 {device_count} 张GPU, "
-                  f"但配置需要 {total_required} 张GPU")
+            print(f"[WARN] CUDA_VISIBLE_DEVICES has {device_count} GPUs, "
+                  f"but config requires {total_required}")
     
     return {
         "tensor_parallel_size": tensor_parallel_size,
@@ -77,8 +77,8 @@ def validate_model_path(model_path: str) -> str:
     
     # 检查路径是否存在
     if not os.path.exists(model_path):
-        print(f"⚠️  警告: 模型路径不存在: {model_path}")
-        print(f"   请确保模型已正确下载或挂载")
+        print(f"[WARN] Model path not found: {model_path}")
+        print(f"   Please ensure model is downloaded or mounted correctly")
     
     return os.path.abspath(model_path)
 
@@ -117,5 +117,5 @@ def validate_max_model_len(max_len: int) -> int:
     if max_len < 1:
         raise ValueError(f"max_model_len 必须 >= 1, 当前: {max_len}")
     if max_len > 100000:
-        print(f"⚠️  警告: max_model_len 设置为 {max_len}, 这可能需要大量显存")
+        print(f"[WARN] max_model_len set to {max_len}, may require large GPU memory")
     return max_len

@@ -36,7 +36,7 @@ class MultiModalProcessor:
                 image = self.image_loader.load(source)
                 images.append(image)
             except ImageLoadError as e:
-                print(f"⚠️  图像加载失败: {e}")
+                print(f"[WARN] Image load failed: {e}")
                 continue
         return images
     
@@ -59,7 +59,7 @@ class MultiModalProcessor:
                 video_data, video_meta = self.video_loader.load(source)
                 videos.append((video_data, video_meta))
             except VideoLoadError as e:
-                print(f"⚠️  视频加载失败: {e}")
+                print(f"[WARN] Video load failed: {e}")
                 continue
         return videos
     
@@ -104,7 +104,7 @@ class MultiModalProcessor:
                     video_data, video_meta = self.video_loader.load(video_url)
                     loaded_videos.append((video_data, video_meta))
                 except VideoLoadError as e:
-                    print(f"⚠️  视频加载失败: {e}")
+                    print(f"[WARN] Video load failed: {e}")
                     continue
             
             if loaded_videos:

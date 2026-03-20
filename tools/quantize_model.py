@@ -53,7 +53,7 @@ def quantize_awq(
     tokenizer = AutoTokenizer.from_pretrained(input_model, trust_remote_code=True)
 
     # 执行量化
-    print("⚙️  正在量化...")
+    print("[INFO] Quantizing...")
     quantizer.quantize(
         quant_path=output_model,
         quant_method="awq",
@@ -66,9 +66,9 @@ def quantize_awq(
     # 保存分词器
     tokenizer.save_pretrained(output_model)
 
-    print(f"✅ AWQ 量化完成！")
-    print(f"   模型保存到: {output_model}")
-    print(f"\n📝 在 vLLM 中使用的配置:")
+    print(f"[INFO] AWQ quantization complete!")
+    print(f"   Model saved to: {output_model}")
+    print(f"\n[INFO] Config for vLLM:")
     print(f"   model:")
     print(f"     path: \"{output_model}\"")
     print(f"     dtype: \"float16\"")
@@ -103,13 +103,13 @@ def quantize_gptq(
     )
 
     # 执行量化
-    print("⚙️  正在量化...")
+    print("[INFO] Quantizing...")
     quantization.configure(bits=bits, group_size=group_size)
     model.quantize(output_model)
 
-    print(f"✅ GPTQ 量化完成！")
-    print(f"   模型保存到: {output_model}")
-    print(f"\n📝 在 vLLM 中使用的配置:")
+    print(f"[INFO] GPTQ quantization complete!")
+    print(f"   Model saved to: {output_model}")
+    print(f"\n[INFO] Config for vLLM:")
     print(f"   model:")
     print(f"     path: \"{output_model}\"")
     print(f"     dtype: \"float16\"")
@@ -142,16 +142,16 @@ def quantize_fp8(
     )
 
     # 执行 FP8 量化
-    print("⚙️  正在量化...")
+    print("[INFO] Quantizing...")
     oneshot(
         model=model,
         recipe="experimental::fp8",
         output_model=output_model,
     )
 
-    print(f"✅ FP8 量化完成！")
-    print(f"   模型保存到: {output_model}")
-    print(f"\n📝 在 vLLM 中使用的配置:")
+    print(f"[INFO] FP8 quantization complete!")
+    print(f"   Model saved to: {output_model}")
+    print(f"\n[INFO] Config for vLLM:")
     print(f"   model:")
     print(f"     path: \"{output_model}\"")
     print(f"     dtype: \"auto\"")
@@ -188,16 +188,16 @@ def quantize_int4_llm_compressor(
     )
 
     # 执行 INT4 量化
-    print("⚙️  正在量化...")
+    print("[INFO] Quantizing...")
     oneshot(
         model=model,
         recipe=f"quantization::W{bits}A16",
         output_model=output_model,
     )
 
-    print(f"✅ INT4 量化完成！")
-    print(f"   模型保存到: {output_model}")
-    print(f"\n📝 在 vLLM 中使用的配置:")
+    print(f"[INFO] INT4 quantization complete!")
+    print(f"   Model saved to: {output_model}")
+    print(f"\n[INFO] Config for vLLM:")
     print(f"   model:")
     print(f"     path: \"{output_model}\"")
     print(f"     dtype: \"float16\"")

@@ -199,9 +199,9 @@ def load_config(args: argparse.Namespace):
         try:
             settings.multimodal.limit_mm_per_prompt = json.loads(args.limit_mm_per_prompt)
         except json.JSONDecodeError as e:
-            print(f"❌ 错误: --limit-mm-per-prompt 必须是有效的JSON格式")
-            print(f"   解析错误: {e}")
-            print(f"   示例: '{{\"image\": 3, \"video\": 1}}'")
+            print(f"[ERROR] --limit-mm-per-prompt must be valid JSON")
+            print(f"   Parse error: {e}")
+            print(f"   Example: '{{\"image\": 3, \"video\": 1}}'")
             sys.exit(1)
     
     # 日志配置
@@ -239,7 +239,7 @@ def load_config(args: argparse.Namespace):
         settings.engine.data_parallel_size = validated_gpu["data_parallel_size"]
         settings.engine.distributed_executor_backend = validated_gpu["distributed_executor_backend"]
     except ValueError as e:
-        print(f"❌ 配置错误: {e}")
+        print(f"[ERROR] Config error: {e}")
         sys.exit(1)
     
     return settings
@@ -259,23 +259,16 @@ def run_server(config):
     gpu_ids = config.engine.gpu_ids
     if gpu_ids:
         os.environ["CUDA_VISIBLE_DEVICES"] = gpu_ids
-        print(f"🎮 使用GPU: {gpu_ids}")
-        
-        # 自动设置tensor_parallel_size（如果未手动设置且配置了多个GPU）
-        gpu_count = len(gpu_ids.split(","))
-        if config.engine.tensor_parallel_size is None and gpu_count > 1:
-            config.engine.tensor_parallel_size = gpu_count
-            print(f"⚡ 自动设置 tensor_parallel_size={gpu_count}")
+        print(f"[INFO] Using GPUs: {gpu_ids}")
     else:
-        print("🎮 使用默认GPU (CUDA_VISIBLE_DEVICES)")
+        print("[INFO] Using default GPUs from CUDA_VISIBLE_DEVICES")
     
     # 创建应用
     app = create_app(config)
     
     # 打印启动信息
-    print(f"🚀 启动vLLM Engine Server...")
-    print(f"📁 模型: {config.model.path}")
-    print(f"🎯 地址: http://{config.server.host}:{config.server.port}")
+    print(f"[INFO] Model: {config.model.path}")
+    print(f"[INFO] Server starting at http://{config.server.host}:{config.server.port}")
     
     # 启动服务器
     uvicorn.run(

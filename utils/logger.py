@@ -51,7 +51,7 @@ def setup_logging(
     access_logger.addHandler(file_handler)
     access_logger.setLevel(log_level)
     
-    print(f"📝 日志配置完成: {log_file_path}")
+    print(f"[INFO] Logging configured: {log_file_path}")
 
 
 def log_request(
@@ -85,7 +85,7 @@ def log_request(
             with open(log_file_path, "a", encoding="utf-8") as f:
                 f.write(json.dumps(log_entry, ensure_ascii=False) + "\n")
     except Exception as e:
-        print(f"⚠️  日志写入失败: {e}")
+        print(f"[WARN] Log write failed: {e}")
 
 
 def get_logger(name: str) -> logging.Logger:

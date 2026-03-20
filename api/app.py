@@ -18,7 +18,7 @@ async def lifespan(app: FastAPI):
     
     # 启动时初始化Engine
     from core import engine_manager, build_engine_args
-    print("🚀 正在初始化vLLM Engine...")
+    print("[INFO] Initializing vLLM Engine...")
     engine_args = build_engine_args(config)
     await engine_manager.initialize(config, engine_args)
     
