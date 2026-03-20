@@ -216,7 +216,7 @@ multimodal:
   # 参考: docs/vllm/docs/features/multimodal_inputs.md
   limit_mm_per_prompt:
     image: 4
-    video: 2
+    video: 1
 
 # ============================================================
 # 日志配置
