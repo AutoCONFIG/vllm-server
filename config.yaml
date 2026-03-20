@@ -1,82 +1,250 @@
-# vLLM Engine Server 配置示例
-#
+# vLLM Engine Server 配置文件
+# 
 # 复制此文件为 config.yaml 并修改实际值
 
 server:
+  # 服务器监听地址
+  # 可选值: IP地址字符串
+  # 默认: "0.0.0.0"
   host: "0.0.0.0"
+  
+  # 服务器监听端口
+  # 可选值: 1-65535
+  # 默认: 8000
   port: 8000
+  
+  # API文档标题
   title: "vLLM Engine Server"
   version: "1.0.0"
   description: "vLLM Engine 服务器"
 
+# ============================================================
+# 模型配置
+# ============================================================
 model:
-  # 模型路径（必需）
+  # 模型权重路径（必需）
+  # 支持本地模型目录或HuggingFace模型ID
   path: "/root/bayes-tmp/qwen3_vl"
-  # 数据类型: auto, float16, bfloat16, float32
-  dtype: "bfloat16"
-  # 量化类型: fp8, int8, int4, awq, gptq, bitsandbytes, compressed-tensors, quark 等
-  # 如果模型本身是量化的（如 FP8 权重），建议使用 "auto" 或不设置
+  
+  # 模型计算精度
+  # 可选值:
+  #   - "auto": 自动选择（推荐，用于量化模型）
+  #   - "float16": FP16精度
+  #   - "bfloat16": BF16精度
+  #   - "float32": FP32精度
+  # 默认: "auto"
+  # 说明: 根据vLLM官方文档，量化模型建议使用"auto"
+  # 参考: docs/vllm/docs/serving/openai_compatible_server.md
+  dtype: "auto"
+  
+  # 模型权重量化方式
+  # 可选值:
+  #   - null/不设置: 不使用量化
+  #   - "fp8": FP8动态量化
+  #   - "int8": INT8量化
+  #   - "int4": INT4量化
+  #   - "awq": AWQ量化
+  #   - "gptq": GPTQ量化
+  #   - "bitsandbytes":bnb量化
+  #   - "compressed-tensors": 压缩张量格式
+  #   - "quark": QUARK量化
+  #   - "modelopt_fp4": ModelOpt FP4
+  #   - "modelopt_mxfp8": ModelOpt MXFP8
+  # 默认: null
+  # 说明: 根据docs/vllm/docs/features/quantization/fp8.md
   quantization: fp8
-  # KV Cache 数据类型: auto, fp8, fp8_e4m3, fp8_e5m2, bfloat16
-  # FP8 量化可额外节省 30-50% KV Cache 显存
+  
+  # KV Cache数据类型
+  # 可选值:
+  #   - null: 与dtype保持一致
+  #   - "auto": 自动选择
+  #   - "fp8": FP8精度
+  #   - "fp8_e4m3": FP8 E4M3格式
+  #   - "fp8_e5m2": FP8 E5M2格式
+  #   - "bfloat16": BF16精度
+  # 默认: null
+  # 说明: 参考docs/vllm/docs/features/quantization/quantized_kvcache.md
   kv_cache_dtype: fp8
 
+# ============================================================
+# Engine推理引擎配置
+# ============================================================
 engine:
-  # GPU显存利用率 (0-1)（必需）
+  # GPU显存利用率
+  # 可选值: 0.0 - 1.0
+  # 推荐值: 0.80 - 0.95
+  # 默认: 0.90
+  # 说明: 参考docs/vllm/docs/configuration/optimization.md
   gpu_memory_utilization: 0.80
-
-  # 使用的GPU编号，空表示使用全部GPU
-  # 可以指定单卡如 "2"，多卡如 "0,1,2,3"
+  
+  # 使用的GPU编号
+  # 可选值:
+  #   - null/空: 使用所有GPU
+  #   - "0": 仅GPU 0
+  #   - "0,1,2,3": GPU 0,1,2,3
   gpu_ids: "0,1,2,3"
-
-  # 最大模型长度
+  
+  # 最大模型长度（token数）
+  # 可选值: 正整数
+  # 推荐值: 根据模型实际需求设置
+  # 默认: 模型配置最大值
   max_model_len: 32768
-  # KV cache block 大小
+  
+  # KV Cache block大小
+  # 可选值: 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384
+  # 必须能被tensor_parallel_size整除
+  # 默认: 16 (参考docs/vllm/docs/usage/usage_stats.md)
+  # 说明: 大block管理开销小但显存利用率可能低
   block_size: 8192
+  
   # 最大并发序列数
-  max_num_seqs: 64
-  # 张量并行大小，根据gpu_ids数量自动设置（留空则自动）
-  # 单独配置则使用指定值
+  # 可选值: 正整数
+  # 默认: 256
+  max_num_seqs: 256
+  
+  # 张量并行大小 (Tensor Parallelism, TP)
+  # 可选值: 1 - GPU数量
+  # 说明: 将模型层拆分到多张GPU
+  # 参考: docs/vllm/docs/configuration/optimization.md#tensor-parallelism-tp
   tensor_parallel_size: 4
+  
+  # 流水线并行大小 (Pipeline Parallelism, PP)
+  # 可选值: 1 - GPU数量 / tensor_parallel_size
+  # 说明: 将模型层组分布到不同GPU，减少每卡显存但增加延迟
+  # 参考: docs/vllm/docs/configuration/optimization.md#pipeline-parallelism-pp
   pipeline_parallel_size: 1
-  # 数据并行大小 (需要Ray后端)
+  
+  # 数据并行大小 (Data Parallelism, DP)
+  # 可选值: 正整数
+  # 说明: 复制模型副本处理不同请求，需要Ray后端
+  # 参考: docs/vllm/docs/configuration/optimization.md#data-parallelism-dp
   data_parallel_size: 1
-  # 分布式执行后端: mp(multiprocessing) 或 ray
-  distributed_executor_backend: "mp"
+  
+  # 分布式执行后端
+  # 可选值:
+  #   - "mp": multiprocessing，多进程模式
+  #     - 单节点默认后端
+  #     - 启动快，资源占用少
+  #   - "ray": Ray框架
+  #     - 多节点默认后端
+  #     - 支持更复杂的分布式场景
+  # 默认: 单节点"mp"，多节点"ray"
+  # 说明: 根据docs/vllm/docs/serving/parallelism_scaling.md
+  #       VL模型建议使用ray以更好协调Vision Encoder和LLM
+  distributed_executor_backend: "ray"
+  
   # 启用分块预填充
+  # 可选值: true, false
+  # 默认: true (V1默认启用)
+  # 说明: 将长prompt分块处理，避免显存爆炸
+  # 参考: docs/vllm/docs/configuration/optimization.md#chunked-prefill
   enable_chunked_prefill: true
-  # 分块预填充的最大 batch token 数
-  max_num_batched_tokens: 8192
+  
+  # 分块预填充的最大batch token数
+  # 可选值: 正整数，必须能被tensor_parallel_size整除
+  # 推荐值:
+  #   - 1024-4096: 短prompt
+  #   - 8192-16384: 长prompt/VL模型
+  #   - V1默认: 8192
+  # 说明: 根据docs/vllm/docs/configuration/optimization.md
+  #       "For optimal throughput, we recommend setting max_num_batched_tokens > 8192
+  #        especially for smaller models on large GPUs."
+  max_num_batched_tokens: 16384
+  
   # 启用前缀缓存
+  # 可选值: true, false
+  # 默认: false
+  # 说明: 缓存相同前缀的KV Cache，避免重复计算
+  #       只提升prefill阶段性能，不提升decode性能
+  #       适合共享系统提示或多轮对话场景
+  # 参考: docs/vllm/docs/features/automatic_prefix_caching.md
   enable_prefix_caching: true
-  # 调度策略: fcfs 或 lpm
+  
+  # 调度策略
+  # 可选值:
+  #   - "fcfs": First Come First Serve，先来先服务
+  #   - "lpm": Longest Prefix Match，最长前缀匹配
+  #             优先处理与缓存前缀最长的请求
+  # 默认: "fcfs"
+  # 说明: 启用前缀缓存时lpm可能有更好效果
   scheduling_policy: "fcfs"
+  
   # 随机种子
+  # 可选值: 非负整数
+  # 默认: 42
   seed: 42
+  
   # 禁用自定义all-reduce
-  disable_custom_all_reduce: true
-  # 注意力后端: FLASH_ATTN(默认), FLASHINFER, TRITON_ATTN, FLEX_ATTENTION
-  # FlashInfer在Blackwell(GPU SM100+)上性能更优，FlashAttention在Ampere/Hopper上更优
+  # 可选值:
+  #   - true: 禁用自定义kernel，使用标准NCCL all-reduce
+  #   - false: 启用自定义kernel
+  # 默认: true (参考docs/vllm/docs/usage/usage_stats.md)
+  # 说明: 自定义all-reduce使用NCCL fused kernel
+  #       4090支持自定义kernel，启用可能减少TP通信开销
+  disable_custom_all_reduce: false
+  
+  # 注意力机制后端
+  # 可选值:
+  #   - "FLASH_ATTN": FlashAttention，默认最快
+  #   - "FLASHINFER": FlashInfer，Blackwell上最优
+  #   - "TRITON_ATTN": Triton实现
+  #   - "FLEX_ATTENTION": PyTorch FlexAttention
+  #   - "EAGER": 朴素实现，仅用于调试
+  #   - "FLASHMLA": 用于DeepSeek MLA
+  #   - "FLASH_ATTN_MLA": 用于Qwen/DeepSeek MLA
+  # 默认: 自动选择（根据GPU架构）
+  # 说明: 
+  #   - 4090 (Ampere SM 8.x): FLASH_ATTN优先级最高
+  #   - H100 (Hopper SM 9.x): FLASH_ATTN或FLASHINFER
+  #   - Blackwell (SM 10.x): FLASHINFER优先级最高
+  #   - 不支持FP8 KV Cache的版本可能需要改用其他backend
+  # 参考: docs/vllm/docs/design/attention_backends.md
+  #       以及docs/vllm/docs/configuration/optimization.md#attention-backend-selection
   attention_backend: "FLASH_ATTN"
 
+# ============================================================
+# 多模态配置
+# ============================================================
 multimodal:
-  # 限制每个提示的多模态数量
+  # 每个请求的多模态内容限制
   # 格式: {"image": 数量, "video": 数量}
+  # 可选值: 正整数
+  # 默认: null (不限制)
+  # 说明: 防止单请求过多多模态内容导致OOM
+  # 参考: docs/vllm/docs/features/multimodal_inputs.md
   limit_mm_per_prompt:
     image: 4
     video: 2
 
+# ============================================================
+# 日志配置
+# ============================================================
 logging:
-  # 日志级别: DEBUG, INFO, WARNING, ERROR
+  # 日志级别
+  # 可选值:
+  #   - "DEBUG": 详细调试信息
+  #   - "INFO": 一般信息
+  #   - "WARNING": 警告
+  #   - "ERROR": 错误
+  #   - "CRITICAL": 严重错误
+  # 默认: "INFO"
   level: "INFO"
+  
   # 记录所有API请求
+  # 可选值: true, false
+  # 默认: false
   log_requests: false
+  
   # 日志目录
   log_dir: "logs"
-  # 请求日志文件名
   request_log_file: "api_requests.log"
-  # 服务器日志文件名
   server_log_file: "server.log"
 
+# ============================================================
 # 实验性功能
+# ============================================================
+# 前缀缓存全局开关
+# 可选值: true, false
+# 默认: false
+# 说明: 部分模型如Mamba需要禁用以避免警告
 disable_prefix_caching: false
