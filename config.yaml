@@ -56,18 +56,17 @@ model:
   
   # KV Cache数据类型
   # 可选值:
-  #   - null: 与dtype保持一致
   #   - "auto": 自动选择
   #   - "fp8": FP8精度
   #   - "fp8_e4m3": FP8 E4M3格式
   #   - "fp8_e5m2": FP8 E5M2格式
   #   - "bfloat16": BF16精度
-  # 默认: null
+  # 默认: auto
   # 说明: 参考docs/vllm/docs/features/quantization/quantized_kvcache.md
   # 注意: FLASH_ATTN 后端不支持 FP8 KV Cache，会导致启动失败
-  # 如需使用 FLASH_ATTN，需将 kv_cache_dtype 设为 null 或 bfloat16
+  # 如需使用 FLASH_ATTN，需将 kv_cache_dtype 设为 auto 或 bfloat16
   # 如需使用 FP8 KV Cache，需将 attention_backend 设为 FLASHINFER
-  kv_cache_dtype: null
+  kv_cache_dtype: auto
 
 # ============================================================
 # Engine推理引擎配置
