@@ -11,7 +11,7 @@ server:
 
 model:
   # 模型路径（必需）
-  path: "/data2/kaiyun/qwen/model"
+  path: "/root/bayes-tmp/qwen3_vl"
   # 数据类型: auto, float16, bfloat16, float32
   dtype: "bfloat16"
   # 量化类型: fp8, int8, int4, awq, gptq, bitsandbytes, compressed-tensors, quark 等
@@ -27,7 +27,7 @@ engine:
 
   # 使用的GPU编号，空表示使用全部GPU
   # 可以指定单卡如 "2"，多卡如 "0,1,2,3"
-  gpu_ids: "2,3,4,5"
+  gpu_ids: "0,1,2,3"
 
   # 最大模型长度
   max_model_len: 32768
