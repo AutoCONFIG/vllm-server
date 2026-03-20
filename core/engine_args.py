@@ -53,6 +53,9 @@ def build_engine_args(
         
         # 禁用不支持的优化以避免警告
         "disable_custom_all_reduce": engine_cfg.disable_custom_all_reduce,
+        
+        # 注意力后端配置
+        "attention_backend": engine_cfg.attention_backend,
     }
     
     # 多模态配置
@@ -86,6 +89,10 @@ def print_engine_config(config: Any) -> None:
               f"DP={config.engine.data_parallel_size}")
         print(f"🖥️  总GPU数: {total_gpus}")
         print(f"🔧 分布式后端: {config.engine.distributed_executor_backend}")
+    
+    # 注意力后端信息
+    if config.engine.attention_backend:
+        print(f"⚡ 注意力后端: {config.engine.attention_backend}")
     
     # 多模态信息
     if config.multimodal.limit_mm_per_prompt is not None:

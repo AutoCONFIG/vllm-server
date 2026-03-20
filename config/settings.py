@@ -60,6 +60,10 @@ class EngineConfig(BaseModel):
     seed: Optional[int] = None
     disable_custom_all_reduce: Optional[bool] = None
     scheduling_policy: Optional[str] = None
+    attention_backend: Optional[str] = Field(
+        default=None,
+        description="注意力后端: FLASH_ATTN, FLASHINFER, TRITON_ATTN, FLEX_ATTENTION等"
+    )
 
 
 class MultimodalConfig(BaseModel):

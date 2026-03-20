@@ -55,6 +55,9 @@ engine:
   seed: 42
   # 禁用自定义all-reduce
   disable_custom_all_reduce: true
+  # 注意力后端: FLASH_ATTN(默认), FLASHINFER, TRITON_ATTN, FLEX_ATTENTION
+  # FlashInfer在Blackwell(GPU SM100+)上性能更优，FlashAttention在Ampere/Hopper上更优
+  attention_backend: "FLASHINFER"
 
 multimodal:
   # 限制每个提示的多模态数量
