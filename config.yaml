@@ -76,8 +76,8 @@ engine:
   # 可选值: 0.0 - 1.0
   # 推荐值: 0.80 - 0.95
   # 默认: 0.90
-  # 说明: 参考docs/vllm/docs/configuration/optimization.md
-  gpu_memory_utilization: 0.90
+  # 说明: 降低此值可以为多模态输入预留更多显存
+  gpu_memory_utilization: 0.80
   
   # 使用的GPU编号
   # 可选值:
@@ -90,7 +90,8 @@ engine:
   # 可选值: 正整数
   # 推荐值: 根据模型实际需求设置
   # 默认: 模型配置最大值
-  max_model_len: 65536
+  # 说明: 降低此值可以减少多模态输入时的显存占用
+  max_model_len: 32768
   
   # KV Cache block大小
   # 可选值: 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384
@@ -102,7 +103,8 @@ engine:
   # 最大并发序列数
   # 可选值: 正整数
   # 默认: 256
-  max_num_seqs: 256
+  # 说明: 降低此值可以减少并发处理时的显存占用
+  max_num_seqs: 64
   
   # 张量并行大小 (Tensor Parallelism, TP)
   # 可选值: 1 - GPU数量
@@ -148,10 +150,8 @@ engine:
   #   - 1024-4096: 短prompt
   #   - 8192-16384: 长prompt/VL模型
   #   - V1默认: 8192
-  # 说明: 根据docs/vllm/docs/configuration/optimization.md
-  #       "For optimal throughput, we recommend setting max_num_batched_tokens > 8192
-  #        especially for smaller models on large GPUs."
-  max_num_batched_tokens: 16384
+  # 说明: 降低此值可以减少多模态输入时的显存占用
+  max_num_batched_tokens: 8192
   
   # 启用前缀缓存
   # 可选值: true, false
