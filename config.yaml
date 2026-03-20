@@ -23,21 +23,21 @@ model:
 
 engine:
   # GPU显存利用率 (0-1)（必需）
-  gpu_memory_utilization: 0.95
+  gpu_memory_utilization: 0.80
 
   # 使用的GPU编号，空表示使用全部GPU
   # 可以指定单卡如 "2"，多卡如 "0,1,2,3"
-  gpu_ids: "2,3,4,5,6"
+  gpu_ids: "2,3,4,5"
 
-  # 最大模型长度，必须能被 tensor_parallel_size 整除
-  max_model_len: 40960
-  # KV cache block 大小，必须能被 tensor_parallel_size 整除
-  block_size: 10240
+  # 最大模型长度
+  max_model_len: 32768
+  # KV cache block 大小
+  block_size: 8192
   # 最大并发序列数
   max_num_seqs: 64
   # 张量并行大小，根据gpu_ids数量自动设置（留空则自动）
   # 单独配置则使用指定值
-  tensor_parallel_size: null
+  tensor_parallel_size: 4
   pipeline_parallel_size: 1
   # 数据并行大小 (需要Ray后端)
   data_parallel_size: 1
@@ -45,8 +45,8 @@ engine:
   distributed_executor_backend: "mp"
   # 启用分块预填充
   enable_chunked_prefill: true
-  # 分块预填充的最大 batch token 数，必须能被 tensor_parallel_size 整除
-  max_num_batched_tokens: 8190
+  # 分块预填充的最大 batch token 数
+  max_num_batched_tokens: 8192
   # 启用前缀缓存
   enable_prefix_caching: true
   # 调度策略: fcfs 或 lpm
