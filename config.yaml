@@ -98,25 +98,25 @@ engine:
   # 必须能被tensor_parallel_size整除
   # 默认: 16 (参考docs/vllm/docs/usage/usage_stats.md)
   # 说明: 大block管理开销小但显存利用率可能低
-  block_size: 32
+  block_size: 16
   
   # 最大并发序列数
   # 可选值: 正整数
   # 默认: 256
   # 说明: 提高此值可提升吞吐量
-  max_num_seqs: 128
+  max_num_seqs: 64
   
   # 张量并行大小 (Tensor Parallelism, TP)
   # 可选值: 1 - GPU数量
   # 说明: 将模型层拆分到多张GPU
   # 参考: docs/vllm/docs/configuration/optimization.md#tensor-parallelism-tp
-  tensor_parallel_size: 4
+  tensor_parallel_size: 2
   
   # 流水线并行大小 (Pipeline Parallelism, PP)
   # 可选值: 1 - GPU数量 / tensor_parallel_size
   # 说明: 将模型层组分布到不同GPU，减少每卡显存但增加延迟
   # 参考: docs/vllm/docs/configuration/optimization.md#pipeline-parallelism-pp
-  pipeline_parallel_size: 1
+  pipeline_parallel_size: 2
   
   # 数据并行大小 (Data Parallelism, DP)
   # 可选值: 正整数
@@ -151,7 +151,7 @@ engine:
   #   - 8192-16384: 长prompt/VL模型
   #   - V1默认: 8192
   # 说明: 提高此值可提升吞吐量
-  max_num_batched_tokens: 8192
+  max_num_batched_tokens: 4096
   
   # 启用前缀缓存
   # 可选值: true, false
