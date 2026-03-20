@@ -64,7 +64,10 @@ model:
   #   - "bfloat16": BF16精度
   # 默认: null
   # 说明: 参考docs/vllm/docs/features/quantization/quantized_kvcache.md
-  kv_cache_dtype: fp8
+  # 注意: FLASH_ATTN 后端不支持 FP8 KV Cache，会导致启动失败
+  # 如需使用 FLASH_ATTN，需将 kv_cache_dtype 设为 null 或 bfloat16
+  # 如需使用 FP8 KV Cache，需将 attention_backend 设为 FLASHINFER
+  kv_cache_dtype: null
 
 # ============================================================
 # Engine推理引擎配置
@@ -196,8 +199,8 @@ engine:
   # 说明: 
   #   - 4090 (Ampere SM 8.x): FLASH_ATTN优先级最高
   #   - H100 (Hopper SM 9.x): FLASH_ATTN或FLASHINFER
-  #   - Blackwell (SM 10.x): FLASHINFER优先级最高
-  #   - 不支持FP8 KV Cache的版本可能需要改用其他backend
+  # - Blackwell (SM 10.x): FLASHINFER优先级最高
+  # - 不支持FP8 KV Cache的版本可能需要改用其他backend
   # 参考: docs/vllm/docs/design/attention_backends.md
   #       以及docs/vllm/docs/configuration/optimization.md#attention-backend-selection
   attention_backend: "FLASH_ATTN"
