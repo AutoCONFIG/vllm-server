@@ -22,6 +22,12 @@ server:
 # 模型配置
 # ============================================================
 model:
+  # 模型名称（用于API响应）
+  # 可选值: 字符串
+  # 默认: 从model.path提取
+  # 说明: 这是提供给客户端使用的模型名称，不是模型权重路径
+  name: "qwen-3-vl"
+  
   # 模型权重路径（必需）
   # 支持本地模型目录或HuggingFace模型ID
   path: "/root/bayes-tmp/qwen3_vl"
@@ -110,13 +116,13 @@ engine:
   # 可选值: 1 - GPU数量
   # 说明: 将模型层拆分到多张GPU
   # 参考: docs/vllm/docs/configuration/optimization.md#tensor-parallelism-tp
-  tensor_parallel_size: 2
+  tensor_parallel_size: 4
   
   # 流水线并行大小 (Pipeline Parallelism, PP)
   # 可选值: 1 - GPU数量 / tensor_parallel_size
   # 说明: 将模型层组分布到不同GPU，减少每卡显存但增加延迟
   # 参考: docs/vllm/docs/configuration/optimization.md#pipeline-parallelism-pp
-  pipeline_parallel_size: 2
+  pipeline_parallel_size: 1
   
   # 数据并行大小 (Data Parallelism, DP)
   # 可选值: 正整数
@@ -135,7 +141,7 @@ engine:
   # 默认: 单节点"mp"，多节点"ray"
   # 说明: 根据docs/vllm/docs/serving/parallelism_scaling.md
   #       VL模型建议使用ray以更好协调Vision Encoder和LLM
-  distributed_executor_backend: "ray"
+  distributed_executor_backend: "mp"
   
   # 启用分块预填充
   # 可选值: true, false

@@ -89,7 +89,12 @@ async def _stream_chat_completion(
     from multimodal import messages_to_multimodal_prompt, MultiModalProcessor
     
     request_id = f"cmpl-{int(time.time() * 1000)}"
-    model = request_data.get("model", "qwen-3.5")
+    # 获取模型名称，优先使用请求中的model，否则从配置读取
+    config = engine_manager.config
+    default_model = config.model.name if config.model.name else None
+    if not default_model and config.model.path:
+        default_model = config.model.path.rstrip("/").split("/")[-1]
+    model = request_data.get("model", default_model)
     temperature = request_data.get("temperature", 0.7)
     top_p = request_data.get("top_p", 1.0)
     max_tokens = request_data.get("max_tokens")

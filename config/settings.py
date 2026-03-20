@@ -19,6 +19,10 @@ class ServerConfig(BaseModel):
 
 class ModelConfig(BaseModel):
     """模型配置"""
+    name: Optional[str] = Field(
+        default=None,
+        description="模型名称（用于API响应），默认从model.path提取"
+    )
     path: Optional[str] = None
     dtype: Optional[str] = Field(
         default=None,
