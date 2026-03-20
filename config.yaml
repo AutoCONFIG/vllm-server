@@ -76,8 +76,8 @@ engine:
   # 可选值: 0.0 - 1.0
   # 推荐值: 0.80 - 0.95
   # 默认: 0.90
-  # 说明: 降低此值可以为多模态输入预留更多显存
-  gpu_memory_utilization: 0.80
+  # 说明: 提高此值可提升推理性能
+  gpu_memory_utilization: 0.85
   
   # 使用的GPU编号
   # 可选值:
@@ -90,8 +90,8 @@ engine:
   # 可选值: 正整数
   # 推荐值: 根据模型实际需求设置
   # 默认: 模型配置最大值
-  # 说明: 降低此值可以减少多模态输入时的显存占用
-  max_model_len: 32768
+  # 说明: 提高此值可提升长文本推理性能，但会增加显存占用
+  max_model_len: 65536
   
   # KV Cache block大小
   # 可选值: 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384
@@ -103,8 +103,8 @@ engine:
   # 最大并发序列数
   # 可选值: 正整数
   # 默认: 256
-  # 说明: 降低此值可以减少并发处理时的显存占用
-  max_num_seqs: 64
+  # 说明: 提高此值可提升吞吐量
+  max_num_seqs: 128
   
   # 张量并行大小 (Tensor Parallelism, TP)
   # 可选值: 1 - GPU数量
@@ -150,8 +150,8 @@ engine:
   #   - 1024-4096: 短prompt
   #   - 8192-16384: 长prompt/VL模型
   #   - V1默认: 8192
-  # 说明: 降低此值可以减少多模态输入时的显存占用
-  max_num_batched_tokens: 8192
+  # 说明: 提高此值可提升吞吐量
+  max_num_batched_tokens: 16384
   
   # 启用前缀缓存
   # 可选值: true, false
@@ -182,7 +182,7 @@ engine:
   #   - false: 启用自定义kernel
   # 默认: true (参考docs/vllm/docs/usage/usage_stats.md)
   # 说明: 自定义all-reduce使用NCCL fused kernel
-  #       4090支持自定义kernel，启用可能减少TP通信开销
+  #       4090支持自定义kernel，启用可减少TP通信开销
   disable_custom_all_reduce: false
   
   # 注意力机制后端
