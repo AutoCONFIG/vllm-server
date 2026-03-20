@@ -75,9 +75,9 @@ engine:
   # GPU显存利用率
   # 可选值: 0.0 - 1.0
   # 推荐值: 0.80 - 0.95
-  # 默认: 0.90
+  # 默认: 0.80
   # 说明: 提高此值可提升推理性能
-  gpu_memory_utilization: 0.85
+  gpu_memory_utilization: 0.80
   
   # 使用的GPU编号
   # 可选值:
