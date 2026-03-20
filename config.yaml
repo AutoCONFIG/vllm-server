@@ -77,7 +77,7 @@ engine:
   # 推荐值: 0.80 - 0.95
   # 默认: 0.80
   # 说明: 提高此值可提升推理性能
-  gpu_memory_utilization: 0.80
+  gpu_memory_utilization: 0.90
   
   # 使用的GPU编号
   # 可选值:
@@ -98,7 +98,7 @@ engine:
   # 必须能被tensor_parallel_size整除
   # 默认: 16 (参考docs/vllm/docs/usage/usage_stats.md)
   # 说明: 大block管理开销小但显存利用率可能低
-  block_size: 8192
+  block_size: 64
   
   # 最大并发序列数
   # 可选值: 正整数
@@ -151,7 +151,7 @@ engine:
   #   - 8192-16384: 长prompt/VL模型
   #   - V1默认: 8192
   # 说明: 提高此值可提升吞吐量
-  max_num_batched_tokens: 16384
+  max_num_batched_tokens: 8192
   
   # 启用前缀缓存
   # 可选值: true, false
