@@ -56,7 +56,8 @@ def messages_to_multimodal_prompt(
                         if "fps" in item:
                             video_params["fps"] = item.get("fps")
                 elif item_type == "video":
-                    # 处理直接传递的视频数据（Qwen2.5-VL格式）
+                    # 处理视频帧列表（Qwen2.5-VL格式）
+                    # 传入的是图片URL列表，fps表示原始视频的抽帧率
                     video_data = item.get("video", "")
                     if video_data:
                         # 添加视频占位符
@@ -68,16 +69,10 @@ def messages_to_multimodal_prompt(
                             }
                             multi_modal_data["video"].append(video_item)
                         # 如果video_data是列表，是图片列表（如预先抽取的视频帧）
+                        # 直接将URL列表传递给后端，让后端处理下载和采样
                         elif isinstance(video_data, list):
-                            # 将图片列表转换为base64编码的JPEG序列
-                            # 格式: data:video/jpeg;base64,frame1,frame2,...
-                            image_list = []
-                            for img_url in video_data:
-                                if img_url:
-                                    image_list.append(img_url)
-                            # 构建视频数据字典
                             video_item = {
-                                "url": f"data:video/jpeg;base64,{','.join(image_list)}",
+                                "url": video_data,  # 传递URL列表，让后端处理
                             }
                             multi_modal_data["video"].append(video_item)
                         # 添加其他参数如 total_pixels, min_pixels, fps

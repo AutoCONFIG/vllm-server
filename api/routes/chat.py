@@ -128,12 +128,6 @@ async def _stream_chat_completion(
                 prompt=prompt,
                 multi_modal_data=mm_data,
             )
-        if mm_data:
-            from vllm.inputs.data import TextPrompt
-            engine_input = TextPrompt(
-                prompt=prompt,
-                multi_modal_data=mm_data,
-            )
 
     previous_text = ""
     full_response_text = ""

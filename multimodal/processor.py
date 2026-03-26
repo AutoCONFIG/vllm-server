@@ -74,7 +74,7 @@ class MultiModalProcessor:
 
         Args:
             images: 图像来源列表
-            videos: 视频字典列表（包含url和其他参数）
+            videos: 视频字典列表（包含url或其他参数）
             mm_processor_kwargs: 多模态处理器参数（如 fps）
 
         Returns:
@@ -94,11 +94,9 @@ class MultiModalProcessor:
             for video_item in videos:
                 if isinstance(video_item, str):
                     video_url = video_item
-                    # 从 mm_processor_kwargs 获取默认参数
                     video_kwargs = mm_processor_kwargs.copy() if mm_processor_kwargs else {}
                 elif isinstance(video_item, dict):
                     video_url = video_item.get("url", "")
-                    # 从 video_item 和 mm_processor_kwargs 合并参数
                     video_kwargs = mm_processor_kwargs.copy() if mm_processor_kwargs else {}
                     for key in ["fps", "total_pixels", "min_pixels"]:
                         if key in video_item:
@@ -110,14 +108,36 @@ class MultiModalProcessor:
                     continue
 
                 try:
-                    if video_kwargs:
-                        video_data, video_meta = self.video_loader.load(
-                            video_url,
-                            **video_kwargs
-                        )
+                    # 处理视频帧列表（URL列表）情况
+                    if isinstance(video_url, list) and video_url:
+                        # 加载每个图片URL
+                        frame_images = self.process_images(video_url)
+                        if frame_images:
+                            # 转换为numpy数组并构建metadata
+                            import numpy as np
+                            frames = np.stack([np.asarray(img) for img in frame_images])
+                            total = int(frames.shape[0])
+                            fps = float(video_kwargs.get("fps", 1))
+                            duration = total / fps if fps > 0 else 0.0
+                            metadata = {
+                                "total_num_frames": total,
+                                "fps": fps,
+                                "duration": duration,
+                                "video_backend": "jpeg_sequence",
+                                "frames_indices": list(range(total)),
+                                "do_sample_frames": False,
+                            }
+                            loaded_videos.append((frames, metadata))
                     else:
-                        video_data, video_meta = self.video_loader.load(video_url)
-                    loaded_videos.append((video_data, video_meta))
+                        # 处理普通视频URL（字符串）
+                        if video_kwargs:
+                            video_data, video_meta = self.video_loader.load(
+                                video_url,
+                                **video_kwargs
+                            )
+                        else:
+                            video_data, video_meta = self.video_loader.load(video_url)
+                        loaded_videos.append((video_data, video_meta))
                 except VideoLoadError as e:
                     print(f"[WARN] Video load failed: {e}")
                     continue
