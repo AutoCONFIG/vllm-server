@@ -8,20 +8,22 @@ from typing import List, Tuple, Optional, Dict, Any
 
 def messages_to_multimodal_prompt(
     messages: List[Dict[str, Any]],
-) -> Tuple[str, Optional[Dict[str, List[Any]]]]:
+) -> Tuple[str, Optional[Dict[str, List[Any]]], Optional[Dict[str, Any]]]:
     """
     将消息列表转换为提示字符串，并提取多模态数据。
-    
+
     Args:
         messages: OpenAI兼容的消息列表，每个消息包含role和content
-        
+
     Returns:
-        Tuple[str, Optional[Dict]]: 
+        Tuple[str, Optional[Dict], Optional[Dict]]:
         - prompt: 转换后的提示字符串（包含图像/视频占位符）
         - multi_modal_data: 包含图像/视频URL的字典，如果没有则为None
+        - video_params: 视频参数（如fps），如果没有则为None
     """
     prompt_parts = []
     multi_modal_data = {"image": [], "video": []}  # 支持图片和视频
+    video_params = {}  # 存储视频参数如fps
     
     for msg in messages:
         role = msg.get("role", "")
@@ -50,21 +52,38 @@ def messages_to_multimodal_prompt(
                         text_parts.append("<|vision_start|><|video_pad|><|vision_end|>")
                         # 添加到多模态数据列表
                         multi_modal_data["video"].append(video_url)
+                        # 保存fps参数
+                        if "fps" in item:
+                            video_params["fps"] = item.get("fps")
                 elif item_type == "video":
                     # 处理直接传递的视频数据（Qwen2.5-VL格式）
                     video_data = item.get("video", "")
                     if video_data:
                         # 添加视频占位符
                         text_parts.append("<|vision_start|><|video_pad|><|vision_end|>")
-                        # 构建视频数据字典
-                        video_item = {
-                            "url": video_data if isinstance(video_data, str) else "",
-                        }
+                        # 如果video_data是字符串，是单个URL
+                        if isinstance(video_data, str):
+                            video_item = {
+                                "url": video_data,
+                            }
+                            multi_modal_data["video"].append(video_item)
+                        # 如果video_data是列表，是图片列表（如预先抽取的视频帧）
+                        elif isinstance(video_data, list):
+                            # 将图片列表转换为base64编码的JPEG序列
+                            # 格式: data:video/jpeg;base64,frame1,frame2,...
+                            image_list = []
+                            for img_url in video_data:
+                                if img_url:
+                                    image_list.append(img_url)
+                            # 构建视频数据字典
+                            video_item = {
+                                "url": f"data:video/jpeg;base64,{','.join(image_list)}",
+                            }
+                            multi_modal_data["video"].append(video_item)
                         # 添加其他参数如 total_pixels, min_pixels, fps
                         for key in ["total_pixels", "min_pixels", "fps"]:
                             if key in item:
-                                video_item[key] = item[key]
-                        multi_modal_data["video"].append(video_item)
+                                video_params[key] = item[key]
             # 合并所有文本部分
             content = "\n".join(text_parts) if text_parts else ""
         
@@ -79,7 +98,7 @@ def messages_to_multimodal_prompt(
     # 添加助手回复起始
     prompt_parts.append("<|im_start|>assistant\n")
     
-    # 如果没有多模 fancinal数据，返回None
+    # 如果没有多模态数据，返回None
     has_image = bool(multi_modal_data["image"])
     has_video = bool(multi_modal_data["video"])
     final_mm_data = None
@@ -89,5 +108,5 @@ def messages_to_multimodal_prompt(
             final_mm_data["image"] = multi_modal_data["image"]
         if has_video:
             final_mm_data["video"] = multi_modal_data["video"]
-    
-    return "\n".join(prompt_parts), final_mm_data
+
+    return "\n".join(prompt_parts), final_mm_data, video_params

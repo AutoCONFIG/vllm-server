@@ -15,31 +15,39 @@ from ..schemas import ChatRequest
 router = APIRouter()
 
 
+def extract_video_params(messages: list) -> dict:
+    """从消息列表中提取视频参数（如 fps）"""
+    video_params = {}
+
+    for msg in messages:
+        content = msg.get("content", "")
+        if isinstance(content, list):
+            for item in content:
+                item_type = item.get("type", "")
+                if item_type == "video_url":
+                    if "fps" in item:
+                        video_params["fps"] = item["fps"]
+                elif item_type == "video":
+                    if "fps" in item:
+                        video_params["fps"] = item["fps"]
+                    for key in ["total_pixels", "min_pixels"]:
+                        if key in item:
+                            video_params[key] = item[key]
+
+    return video_params
+
+
 @router.post("/v1/chat/completions")
 async def chat_completions(
     request: ChatRequest,
     http_request: Request,
 ) -> Any:
-    """
-    聊天补全端点
-    
-    Args:
-        request: 聊天请求
-        http_request: HTTP请求对象
-        
-    Returns:
-        Any: 聊天响应或流式响应
-    """
     from services import ChatService
     from core.engine import engine_manager
-    
-    # 获取配置
+
     config = http_request.app.state.config
-    
-    # 创建服务
     service = ChatService(config)
-    
-    # 构建请求数据
+
     request_data = {
         "model": request.model,
         "messages": request.messages,
@@ -49,8 +57,11 @@ async def chat_completions(
         "stream": request.stream,
         "client_ip": http_request.client.host if http_request.client else "unknown",
     }
-    
-    # 记录请求
+
+    video_params = extract_video_params(request.messages)
+    if video_params:
+        request_data["media_io_kwargs"] = {"video": video_params}
+
     if config.logging.log_requests:
         from utils import log_request
         log_request(
@@ -58,8 +69,7 @@ async def chat_completions(
             config.logging.request_log_file,
             request_data=request_data,
         )
-    
-    # 处理请求
+
     if request.stream:
         return StreamingResponse(
             _stream_chat_completion(service, request_data),
@@ -73,23 +83,12 @@ async def _stream_chat_completion(
     service: Any,
     request_data: dict,
 ) -> AsyncGenerator[str, None]:
-    """
-    流式聊天补全生成器
-    
-    Args:
-        service: 聊天服务实例
-        request_data: 请求数据
-        
-    Yields:
-        str: SSE格式的事件流
-    """
     from core.engine import engine_manager
     engine = engine_manager.engine
     from vllm import SamplingParams
     from multimodal import messages_to_multimodal_prompt, MultiModalProcessor
-    
+
     request_id = f"cmpl-{int(time.time() * 1000)}"
-    # 获取模型名称，优先使用请求中的model，否则从配置读取
     config = engine_manager.config
     default_model = config.model.name if config.model.name else None
     if not default_model and config.model.path:
@@ -99,24 +98,29 @@ async def _stream_chat_completion(
     top_p = request_data.get("top_p", 1.0)
     max_tokens = request_data.get("max_tokens")
     messages = request_data.get("messages", [])
-    
-    # 采样参数
+    media_io_kwargs = request_data.get("media_io_kwargs")
+
     sampling_params = SamplingParams(
         temperature=temperature,
         top_p=top_p,
         max_tokens=max_tokens,
     )
-    
-    # 转换消息
-    prompt, multi_modal_data = messages_to_multimodal_prompt(messages)
-    
-    # 处理多模态数据
+
+    prompt, multi_modal_data, video_params = messages_to_multimodal_prompt(messages)
+
     processor = MultiModalProcessor()
     engine_input = prompt
     if multi_modal_data:
+        mm_processor_kwargs = {}
+        if video_params:
+            mm_processor_kwargs.update(video_params)
+        if media_io_kwargs and "video" in media_io_kwargs:
+            mm_processor_kwargs.update(media_io_kwargs["video"])
+
         mm_data = processor.build_multimodal_data(
             images=multi_modal_data.get("image"),
             videos=multi_modal_data.get("video"),
+            mm_processor_kwargs=mm_processor_kwargs if mm_processor_kwargs else None,
         )
         if mm_data:
             from vllm.inputs.data import TextPrompt
@@ -124,18 +128,23 @@ async def _stream_chat_completion(
                 prompt=prompt,
                 multi_modal_data=mm_data,
             )
-    
+        if mm_data:
+            from vllm.inputs.data import TextPrompt
+            engine_input = TextPrompt(
+                prompt=prompt,
+                multi_modal_data=mm_data,
+            )
+
     previous_text = ""
     full_response_text = ""
-    
-    # 执行生成
+
     async for output in engine.generate(engine_input, sampling_params, request_id):
         for i, completion_output in enumerate(output.outputs):
             delta_text = completion_output.text[len(previous_text):]
             if delta_text:
                 previous_text = completion_output.text
                 full_response_text = completion_output.text
-                
+
                 response = {
                     "id": request_id,
                     "object": "chat.completion.chunk",
@@ -150,8 +159,7 @@ async def _stream_chat_completion(
                     ],
                 }
                 yield f"data: {json.dumps(response)}\n\n"
-    
-    # 发送结束消息
+
     final_response = {
         "id": request_id,
         "object": "chat.completion.chunk",
@@ -167,8 +175,7 @@ async def _stream_chat_completion(
     }
     yield f"data: {json.dumps(final_response)}\n\n"
     yield "data: [DONE]\n\n"
-    
-    # 记录完整响应
+
     config = engine_manager.config
     if config.logging.log_requests and full_response_text:
         from utils import log_request

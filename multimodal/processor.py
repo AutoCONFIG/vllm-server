@@ -67,49 +67,64 @@ class MultiModalProcessor:
         self,
         images: Optional[List[str]] = None,
         videos: Optional[List[Dict[str, Any]]] = None,
+        mm_processor_kwargs: Optional[Dict[str, Any]] = None,
     ) -> Optional[Dict[str, Any]]:
         """
         构建多模态数据字典
-        
+
         Args:
             images: 图像来源列表
             videos: 视频字典列表（包含url和其他参数）
-            
+            mm_processor_kwargs: 多模态处理器参数（如 fps）
+
         Returns:
             Optional[Dict]: 多模态数据字典，如果没有数据则返回None
         """
         mm_data = {}
-        
+
         # 处理图像
         if images:
             loaded_images = self.process_images(images)
             if loaded_images:
                 mm_data["image"] = loaded_images[0] if len(loaded_images) == 1 else loaded_images
-        
+
         # 处理视频
         if videos:
             loaded_videos = []
             for video_item in videos:
                 if isinstance(video_item, str):
                     video_url = video_item
+                    # 从 mm_processor_kwargs 获取默认参数
+                    video_kwargs = mm_processor_kwargs.copy() if mm_processor_kwargs else {}
                 elif isinstance(video_item, dict):
                     video_url = video_item.get("url", "")
+                    # 从 video_item 和 mm_processor_kwargs 合并参数
+                    video_kwargs = mm_processor_kwargs.copy() if mm_processor_kwargs else {}
+                    for key in ["fps", "total_pixels", "min_pixels"]:
+                        if key in video_item:
+                            video_kwargs[key] = video_item[key]
                 else:
                     continue
-                
+
                 if not video_url:
                     continue
-                
+
                 try:
-                    video_data, video_meta = self.video_loader.load(video_url)
+                    if video_kwargs:
+                        video_data, video_meta = self.video_loader.load(
+                            video_url,
+                            **video_kwargs
+                        )
+                    else:
+                        video_data, video_meta = self.video_loader.load(video_url)
                     loaded_videos.append((video_data, video_meta))
                 except VideoLoadError as e:
                     print(f"[WARN] Video load failed: {e}")
                     continue
-            
+
             if loaded_videos:
                 mm_data["video"] = loaded_videos[0] if len(loaded_videos) == 1 else loaded_videos
-        
+
         return mm_data if mm_data else None
     
     def process_for_engine(
