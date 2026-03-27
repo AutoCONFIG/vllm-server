@@ -26,7 +26,7 @@ model:
   # 可选值: 字符串
   # 默认: 从model.path提取
   # 说明: 这是提供给客户端使用的模型名称，不是模型权重路径
-  name: "qwen-3-vl"
+  name: "qwen3-vl"
   
   # 模型权重路径（必需）
   # 支持本地模型目录或HuggingFace模型ID

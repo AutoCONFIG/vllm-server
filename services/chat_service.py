@@ -5,14 +5,12 @@
 
 import time
 import json
-from typing import AsyncGenerator, Optional, Dict, Any, Union
+from typing import AsyncGenerator, Optional, Dict, Any, List
 
 from fastapi import HTTPException
 from vllm import SamplingParams
-from vllm.inputs.data import TextPrompt
 
 from core import engine_manager, EngineNotInitializedError
-from multimodal import messages_to_multimodal_prompt, MultiModalProcessor
 
 
 class ChatService:
@@ -43,54 +41,31 @@ class ChatService:
         engine = engine_manager.engine
         request_id = f"cmpl-{int(time.time() * 1000)}"
 
-        # 解析请求参数
         messages = request.get("messages", [])
         temperature = request.get("temperature", 0.7)
         top_p = request.get("top_p", 1.0)
         max_tokens = request.get("max_tokens")
         
-        # 获取模型名称
         default_model = self.config.model.name if self.config.model.name else None
         if not default_model and self.config.model.path:
             default_model = self.config.model.path.rstrip("/").split("/")[-1]
         model = request.get("model", default_model)
 
-        # 构建采样参数
         sampling_params = SamplingParams(
             temperature=temperature,
             top_p=top_p,
             max_tokens=max_tokens,
         )
 
-        # 转换消息，提取多模态数据和视频参数
-        prompt, multi_modal_data, video_params = messages_to_multimodal_prompt(messages)
+        engine_prompts = await self._render_messages(messages, request)
 
-        # 获取 media_io_kwargs（从请求中）
-        media_io_kwargs = request.get("media_io_kwargs", {})
-
-        # 合并 video_params 和 media_io_kwargs
-        mm_processor_kwargs = {}
-        if video_params:
-            mm_processor_kwargs.update(video_params)
-        if media_io_kwargs and "video" in media_io_kwargs:
-            mm_processor_kwargs.update(media_io_kwargs["video"])
-
-        # 构建Engine输入
-        engine_input = self._build_engine_input(
-            prompt,
-            multi_modal_data,
-            mm_processor_kwargs if mm_processor_kwargs else None
-        )
-
-        # 生成响应
         final_output = None
-        async for output in engine.generate(engine_input, sampling_params, request_id):
+        async for output in engine.generate(engine_prompts[0], sampling_params, request_id):
             final_output = output
 
         if final_output is None:
             raise HTTPException(status_code=500, detail="Generation failed")
 
-        # 构建响应
         choices = []
         for i, output in enumerate(final_output.outputs):
             choices.append({
@@ -118,7 +93,6 @@ class ChatService:
             "usage": usage,
         }
 
-        # 记录日志
         if self.config.logging.log_requests:
             from utils import log_request
             log_request(
@@ -153,7 +127,6 @@ class ChatService:
         top_p = request.get("top_p", 1.0)
         max_tokens = request.get("max_tokens")
         messages = request.get("messages", [])
-        media_io_kwargs = request.get("media_io_kwargs")
 
         sampling_params = SamplingParams(
             temperature=temperature,
@@ -161,32 +134,12 @@ class ChatService:
             max_tokens=max_tokens,
         )
 
-        prompt, multi_modal_data, video_params = messages_to_multimodal_prompt(messages)
-
-        processor = MultiModalProcessor()
-        engine_input: Union[str, TextPrompt] = prompt
-        if multi_modal_data:
-            mm_processor_kwargs = {}
-            if video_params:
-                mm_processor_kwargs.update(video_params)
-            if media_io_kwargs and "video" in media_io_kwargs:
-                mm_processor_kwargs.update(media_io_kwargs["video"])
-
-            mm_data = processor.build_multimodal_data(
-                images=multi_modal_data.get("image"),
-                videos=multi_modal_data.get("video"),
-                mm_processor_kwargs=mm_processor_kwargs if mm_processor_kwargs else None,
-            )
-            if mm_data:
-                engine_input = TextPrompt(
-                    prompt=prompt,
-                    multi_modal_data=mm_data,
-                )
+        engine_prompts = await self._render_messages(messages, request)
 
         previous_text = ""
         full_response_text = ""
 
-        async for output in engine.generate(engine_input, sampling_params, request_id):
+        async for output in engine.generate(engine_prompts[0], sampling_params, request_id):
             for i, completion_output in enumerate(output.outputs):
                 delta_text = completion_output.text[len(previous_text):]
                 if delta_text:
@@ -247,33 +200,35 @@ class ChatService:
                 response_data=response_data,
             )
 
-    def _build_engine_input(
+    async def _render_messages(
         self,
-        prompt: str,
-        multi_modal_data: Optional[Dict],
-        mm_processor_kwargs: Optional[Dict] = None,
-    ) -> Any:
+        messages: List[Dict[str, Any]],
+        request: Dict[str, Any],
+    ) -> List[Any]:
         """
-        构建Engine输入
+        使用 vllm Renderer 渲染消息
 
         Args:
-            prompt: 文本提示
-            multi_modal_data: 多模态数据
-            mm_processor_kwargs: 多模态处理器参数（如 fps）
+            messages: OpenAI 格式的消息列表
+            request: 原始请求字典
 
         Returns:
-            Any: 文本或TextPrompt字典
+            List: 渲染后的 engine prompts
         """
-        if multi_modal_data:
-            processor = MultiModalProcessor()
-            mm_data = processor.build_multimodal_data(
-                images=multi_modal_data.get("image"),
-                videos=multi_modal_data.get("video"),
-                mm_processor_kwargs=mm_processor_kwargs,
-            )
-            if mm_data:
-                return TextPrompt(
-                    prompt=prompt,
-                    multi_modal_data=mm_data,
-                )
-        return prompt
+        from vllm.renderers import ChatParams
+        
+        engine = engine_manager.engine
+        renderer = engine.renderer
+        
+        chat_params = ChatParams(
+            chat_template=request.get("chat_template"),
+            media_io_kwargs=request.get("media_io_kwargs"),
+            mm_processor_kwargs=request.get("mm_processor_kwargs"),
+        )
+        
+        _, engine_prompts = await renderer.render_chat_async(
+            conversations=[messages],
+            chat_params=chat_params,
+        )
+        
+        return engine_prompts

@@ -46,6 +46,18 @@ class ChatRequest(BaseModel):
     max_tokens: Optional[int] = Field(default=None, ge=1)
     stream: bool = Field(default=False)
     
+    chat_template: Optional[str] = Field(
+        default=None,
+        description="自定义聊天模板"
+    )
+    media_io_kwargs: Optional[Dict[str, Dict[str, Any]]] = Field(
+        default=None,
+        description="媒体加载参数，如 {'video': {'fps': 2}}"
+    )
+    mm_processor_kwargs: Optional[Dict[str, Any]] = Field(
+        default=None,
+        description="多模态处理器参数"
+    )
+    
     class Config:
-        # 允许任意字典类型（用于多模态内容）
         extra = "allow"

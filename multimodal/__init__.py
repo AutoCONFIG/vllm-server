@@ -1,18 +1,7 @@
 """多模态处理模块
 
-提供图像、视频等多模态数据的加载和处理功能。
+注意：多模态处理已由 vllm Renderer 自动处理。
+此模块保留为兼容性占位符。
 """
 
-from .image_loader import ImageLoader, ImageLoadError
-from .video_loader import VideoLoader, VideoLoadError
-from .processor import MultiModalProcessor
-from .mapper import messages_to_multimodal_prompt
-
-__all__ = [
-    "ImageLoader",
-    "ImageLoadError",
-    "VideoLoader",
-    "VideoLoadError",
-    "MultiModalProcessor",
-    "messages_to_multimodal_prompt",
-]
+__all__ = []

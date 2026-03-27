@@ -3,9 +3,8 @@
 处理聊天补全API请求。
 """
 
-import time
 import json
-from typing import AsyncGenerator, Any
+from typing import Any
 
 from fastapi import APIRouter, Request, HTTPException
 from fastapi.responses import StreamingResponse
@@ -13,31 +12,6 @@ from fastapi.responses import StreamingResponse
 from ..schemas import ChatRequest
 
 router = APIRouter()
-
-
-def extract_video_params(messages: list) -> dict:
-    """从消息列表中提取视频参数（如 fps）"""
-    video_params = {}
-    
-    if not messages:
-        return video_params
-
-    for msg in messages:
-        content = msg.get("content", "")
-        if isinstance(content, list):
-            for item in content:
-                item_type = item.get("type", "")
-                if item_type == "video_url":
-                    if "fps" in item:
-                        video_params["fps"] = item["fps"]
-                elif item_type == "video":
-                    if "fps" in item:
-                        video_params["fps"] = item["fps"]
-                    for key in ["total_pixels", "min_pixels"]:
-                        if key in item:
-                            video_params[key] = item[key]
-
-    return video_params
 
 
 @router.post("/v1/chat/completions")
@@ -60,13 +34,15 @@ async def chat_completions(
         "client_ip": http_request.client.host if http_request.client else "unknown",
     }
 
-    # 验证消息
     if not request.messages:
         raise HTTPException(status_code=400, detail="messages cannot be empty")
 
-    video_params = extract_video_params(request.messages)
-    if video_params:
-        request_data["media_io_kwargs"] = {"video": video_params}
+    if request.media_io_kwargs:
+        request_data["media_io_kwargs"] = request.media_io_kwargs
+    if request.mm_processor_kwargs:
+        request_data["mm_processor_kwargs"] = request.mm_processor_kwargs
+    if request.chat_template:
+        request_data["chat_template"] = request.chat_template
 
     if config.logging.log_requests:
         from utils import log_request
