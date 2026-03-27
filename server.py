@@ -141,57 +141,57 @@ def load_config(args: argparse.Namespace):
     )
     
     # 命令行参数覆盖配置
-    if args.host is not None and os.getenv("VLLM_SERVER_HOST"):
-        settings.server.host = os.getenv("VLLM_SERVER_HOST")
-    elif args.host is not None:
+    if args.host is not None:
         settings.server.host = args.host
+    elif os.getenv("VLLM_SERVER_HOST"):
+        settings.server.host = os.getenv("VLLM_SERVER_HOST")
     
-    if args.port is None and os.getenv("VLLM_SERVER_PORT"):
-        settings.server.port = int(os.getenv("VLLM_SERVER_PORT"))
-    elif args.port is not None:
+    if args.port is not None:
         settings.server.port = args.port
+    elif os.getenv("VLLM_SERVER_PORT"):
+        settings.server.port = int(os.getenv("VLLM_SERVER_PORT"))
     
-    if args.model is None and os.getenv("VLLM_MODEL_PATH"):
-        settings.model.path = os.getenv("VLLM_MODEL_PATH")
-    elif args.model is not None:
+    if args.model is not None:
         settings.model.path = args.model
+    elif os.getenv("VLLM_MODEL_PATH"):
+        settings.model.path = os.getenv("VLLM_MODEL_PATH")
     
     # Engine配置覆盖
-    if args.gpu_util is not None and os.getenv("VLLM_ENGINE_GPU_MEMORY_UTILIZATION"):
-        settings.engine.gpu_memory_utilization = float(os.getenv("VLLM_ENGINE_GPU_MEMORY_UTILIZATION"))
-    elif args.gpu_util is not None:
+    if args.gpu_util is not None:
         settings.engine.gpu_memory_utilization = args.gpu_util
+    elif os.getenv("VLLM_ENGINE_GPU_MEMORY_UTILIZATION"):
+        settings.engine.gpu_memory_utilization = float(os.getenv("VLLM_ENGINE_GPU_MEMORY_UTILIZATION"))
     
-    if args.max_len is not None and os.getenv("VLLM_ENGINE_MAX_MODEL_LEN"):
-        settings.engine.max_model_len = int(os.getenv("VLLM_ENGINE_MAX_MODEL_LEN"))
-    elif args.max_len is not None:
+    if args.max_len is not None:
         settings.engine.max_model_len = args.max_len
+    elif os.getenv("VLLM_ENGINE_MAX_MODEL_LEN"):
+        settings.engine.max_model_len = int(os.getenv("VLLM_ENGINE_MAX_MODEL_LEN"))
     
-    if args.max_seqs is not None and os.getenv("VLLM_ENGINE_MAX_NUM_SEQS"):
-        settings.engine.max_num_seqs = int(os.getenv("VLLM_ENGINE_MAX_NUM_SEQS"))
-    elif args.max_seqs is not None:
+    if args.max_seqs is not None:
         settings.engine.max_num_seqs = args.max_seqs
+    elif os.getenv("VLLM_ENGINE_MAX_NUM_SEQS"):
+        settings.engine.max_num_seqs = int(os.getenv("VLLM_ENGINE_MAX_NUM_SEQS"))
     
     # 多卡并行配置覆盖
-    if args.tensor_parallel_size is not None and os.getenv("VLLM_ENGINE_TENSOR_PARALLEL_SIZE"):
-        settings.engine.tensor_parallel_size = int(os.getenv("VLLM_ENGINE_TENSOR_PARALLEL_SIZE"))
-    elif args.tensor_parallel_size is not None:
+    if args.tensor_parallel_size is not None:
         settings.engine.tensor_parallel_size = args.tensor_parallel_size
+    elif os.getenv("VLLM_ENGINE_TENSOR_PARALLEL_SIZE"):
+        settings.engine.tensor_parallel_size = int(os.getenv("VLLM_ENGINE_TENSOR_PARALLEL_SIZE"))
     
-    if args.pipeline_parallel_size is not None and os.getenv("VLLM_ENGINE_PIPELINE_PARALLEL_SIZE"):
-        settings.engine.pipeline_parallel_size = int(os.getenv("VLLM_ENGINE_PIPELINE_PARALLEL_SIZE"))
-    elif args.pipeline_parallel_size is not None:
+    if args.pipeline_parallel_size is not None:
         settings.engine.pipeline_parallel_size = args.pipeline_parallel_size
+    elif os.getenv("VLLM_ENGINE_PIPELINE_PARALLEL_SIZE"):
+        settings.engine.pipeline_parallel_size = int(os.getenv("VLLM_ENGINE_PIPELINE_PARALLEL_SIZE"))
     
-    if args.data_parallel_size is not None and os.getenv("VLLM_ENGINE_DATA_PARALLEL_SIZE"):
-        settings.engine.data_parallel_size = int(os.getenv("VLLM_ENGINE_DATA_PARALLEL_SIZE"))
-    elif args.data_parallel_size is not None:
+    if args.data_parallel_size is not None:
         settings.engine.data_parallel_size = args.data_parallel_size
+    elif os.getenv("VLLM_ENGINE_DATA_PARALLEL_SIZE"):
+        settings.engine.data_parallel_size = int(os.getenv("VLLM_ENGINE_DATA_PARALLEL_SIZE"))
     
-    if args.distributed_executor_backend is not None and os.getenv("VLLM_ENGINE_DISTRIBUTED_EXECUTOR_BACKEND"):
-        settings.engine.distributed_executor_backend = os.getenv("VLLM_ENGINE_DISTRIBUTED_EXECUTOR_BACKEND")
-    elif args.distributed_executor_backend is not None:
+    if args.distributed_executor_backend is not None:
         settings.engine.distributed_executor_backend = args.distributed_executor_backend
+    elif os.getenv("VLLM_ENGINE_DISTRIBUTED_EXECUTOR_BACKEND"):
+        settings.engine.distributed_executor_backend = os.getenv("VLLM_ENGINE_DISTRIBUTED_EXECUTOR_BACKEND")
     
     # 多模态配置
     if args.limit_mm_per_prompt is not None:
@@ -205,15 +205,15 @@ def load_config(args: argparse.Namespace):
             sys.exit(1)
     
     # 日志配置
-    if args.log_requests is not None and os.getenv("VLLM_LOGGING_LOG_REQUESTS"):
+    if args.log_requests is not None:
+        settings.logging.log_requests = args.log_requests.lower() == "true"
+    elif os.getenv("VLLM_LOGGING_LOG_REQUESTS"):
         settings.logging.log_requests = os.getenv("VLLM_LOGGING_LOG_REQUESTS").lower() == "true"
-    elif args.log_requests is not None:
-        settings.logging.log_requests = args.log_requests.lower() == "true" if args.log_requests else False
     
-    if args.log_level is not None and os.getenv("VLLM_LOGGING_LEVEL"):
-        settings.logging.level = os.getenv("VLLM_LOGGING_LEVEL")
-    elif args.log_level is not None:
+    if args.log_level is not None:
         settings.logging.level = args.log_level
+    elif os.getenv("VLLM_LOGGING_LEVEL"):
+        settings.logging.level = os.getenv("VLLM_LOGGING_LEVEL")
     
     # 验证配置
     try:

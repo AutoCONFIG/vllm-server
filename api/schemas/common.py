@@ -24,4 +24,4 @@ class ModelList(BaseModel):
 class HealthResponse(BaseModel):
     """健康检查响应"""
     status: str = "healthy"
-    model: str
+    model: str = "ok"

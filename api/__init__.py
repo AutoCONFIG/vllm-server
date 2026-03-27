@@ -3,5 +3,6 @@
 FastAPI路由和请求/响应模型。
 """
 
-# 延迟导入避免循环依赖
+from .app import create_app
+
 __all__ = ["create_app"]

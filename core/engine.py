@@ -90,11 +90,15 @@ class EngineManager:
         关闭Engine
         """
         if self._engine is not None:
-            print("[INFO] Shutting down engine...")
-            await self._engine.shutdown()
-            self._engine = None
-            self._config = None
-            print("[INFO] Engine shutdown complete")
+            try:
+                print("[INFO] Shutting down engine...")
+                await self._engine.shutdown()
+                print("[INFO] Engine shutdown complete")
+            except Exception as e:
+                print(f"[WARN] Error during engine shutdown: {e}")
+            finally:
+                self._engine = None
+                self._config = None
     
     def is_initialized(self) -> bool:
         """

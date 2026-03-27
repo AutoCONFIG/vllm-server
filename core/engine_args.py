@@ -78,15 +78,14 @@ def print_engine_config(config: Any) -> None:
     print(f"[INFO] Max model length: {config.engine.max_model_len}")
     
     # 多卡并行信息
-    total_gpus = (
-        config.engine.tensor_parallel_size *
-        config.engine.pipeline_parallel_size *
-        config.engine.data_parallel_size
-    )
+    tp = config.engine.tensor_parallel_size or 1
+    pp = config.engine.pipeline_parallel_size or 1
+    dp = config.engine.data_parallel_size or 1
+    total_gpus = tp * pp * dp
     if total_gpus > 1:
-        print(f"[INFO] Parallel config: TP={config.engine.tensor_parallel_size}, "
-              f"PP={config.engine.pipeline_parallel_size}, "
-              f"DP={config.engine.data_parallel_size}")
+        print(f"[INFO] Parallel config: TP={tp}, "
+              f"PP={pp}, "
+              f"DP={dp}")
         print(f"[INFO] Total GPUs: {total_gpus}")
         print(f"[INFO] Distributed executor: {config.engine.distributed_executor_backend}")
     

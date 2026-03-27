@@ -3,6 +3,7 @@
 处理图像和视频数据的聚合和转换。
 """
 
+import numpy as np
 from typing import Optional, Dict, Any, List, Tuple
 
 from .image_loader import ImageLoader, ImageLoadError
@@ -114,7 +115,6 @@ class MultiModalProcessor:
                         frame_images = self.process_images(video_url)
                         if frame_images:
                             # 转换为numpy数组并构建metadata
-                            import numpy as np
                             frames = np.stack([np.asarray(img) for img in frame_images])
                             total = int(frames.shape[0])
                             fps = float(video_kwargs.get("fps", 1))

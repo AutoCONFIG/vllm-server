@@ -16,6 +16,14 @@ class VideoLoadError(MediaLoadError):
 class VideoLoader(BaseLoader):
     """视频加载器"""
 
+    def from_url(self, url: str) -> Tuple[Any, Dict[str, Any]]:
+        """从URL加载视频"""
+        return self.load(url)
+
+    def from_base64(self, data_url: str, mime_type: str) -> Tuple[Any, Dict[str, Any]]:
+        """从Base64加载视频"""
+        return self.load(data_url)
+
     def load(
         self,
         source: str,

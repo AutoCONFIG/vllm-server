@@ -13,7 +13,6 @@ def load_config(
     yaml_path: Optional[str] = None,
     fallback_yaml_path: str = "config.yaml",
 ) -> Settings:
-    """加载配置"""
     """
     加载配置
     
