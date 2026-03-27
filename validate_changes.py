@@ -25,8 +25,9 @@ def check_python_file(filepath, description):
 
         # 检查关键函数和类
         tree = ast.parse(source)
-
-        functions for node in ast.walk(tree):
+        functions = []
+        classes = []
+        for node in ast.walk(tree):
             if isinstance(node, ast.FunctionDef):
                 functions.append(node.name)
             elif isinstance(node, ast.ClassDef):
