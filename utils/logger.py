@@ -21,7 +21,7 @@ def setup_logging(
     log_level: str = "INFO",
 ) -> None:
     """
-    配置服务器日志输出到文件
+    配置服务器日志输出到文件和控制台
     
     Args:
         log_dir: 日志目录路径
@@ -33,7 +33,15 @@ def setup_logging(
     
     log_file_path = os.path.join(log_dir, server_log_file)
     
-    # 创建日志处理器
+    # 创建控制台处理器
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(log_level)
+    console_handler.setFormatter(logging.Formatter(
+        '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S'
+    ))
+    
+    # 创建文件处理器
     file_handler = logging.FileHandler(log_file_path, encoding='utf-8')
     file_handler.setLevel(log_level)
     file_handler.setFormatter(logging.Formatter(
@@ -43,11 +51,13 @@ def setup_logging(
     
     # 配置 uvicorn 的日志
     uvicorn_logger = logging.getLogger("uvicorn")
+    uvicorn_logger.addHandler(console_handler)
     uvicorn_logger.addHandler(file_handler)
     uvicorn_logger.setLevel(log_level)
     
     # 配置 uvicorn.access 的日志
     access_logger = logging.getLogger("uvicorn.access")
+    access_logger.addHandler(console_handler)
     access_logger.addHandler(file_handler)
     access_logger.setLevel(log_level)
     

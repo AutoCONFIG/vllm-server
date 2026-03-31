@@ -42,7 +42,7 @@ def load_config(
         if config_path:
             config_data = _load_yaml_file(config_path)
             yaml_loaded = True
-            print(f"📄 从配置文件加载: {config_path}")
+            print(f"从配置文件加载: {config_path}")
     except FileNotFoundError:
         if yaml_path:
             # 如果显式指定了YAML文件但不存在，则报错
