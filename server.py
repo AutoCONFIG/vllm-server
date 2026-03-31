@@ -10,16 +10,6 @@ import argparse
 import os
 import sys
 
-# 添加项目根目录到Python路径
-project_root = os.path.dirname(os.path.abspath(__file__))
-if project_root not in sys.path:
-    sys.path.insert(0, project_root)
-
-# 添加vllm-backend到Python路径（作为vllm_backend模块）
-vllm_backend = os.path.join(project_root, 'vllm-backend')
-if vllm_backend not in sys.path:
-    sys.path.insert(0, vllm_backend)
-
 
 def main():
     """主函数"""
