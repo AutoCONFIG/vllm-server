@@ -265,15 +265,20 @@ def run_server(config):
     print(f"[INFO] Model: {config.model.path}")
     print(f"[INFO] Server starting at http://{config.server.host}:{config.server.port}")
     
-    # 启动服务器
-    uvicorn.run(
-        app,
-        host=config.server.host,
-        port=config.server.port,
-        log_level=config.logging.level.lower(),
-        log_config=None,
-        access_log=True,
-    )
+    try:
+        # 启动服务器
+        uvicorn.run(
+            app,
+            host=config.server.host,
+            port=config.server.port,
+            log_level=config.logging.level.lower(),
+            log_config=None,
+            access_log=True,
+        )
+    finally:
+        # 确保进程完全退出
+        print("[INFO] Server stopped, forcing exit...")
+        os._exit(0)
 
 
 if __name__ == "__main__":

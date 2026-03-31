@@ -4,6 +4,9 @@
 """
 
 import asyncio
+import os
+import signal
+import sys
 from typing import Optional
 
 from vllm.engine.async_llm_engine import AsyncLLMEngine
@@ -92,13 +95,15 @@ class EngineManager:
         if self._engine is not None:
             try:
                 print("[INFO] Shutting down engine...")
-                await self._engine.shutdown()
+                self._engine.shutdown(timeout=5.0)
                 print("[INFO] Engine shutdown complete")
             except Exception as e:
                 print(f"[WARN] Error during engine shutdown: {e}")
             finally:
                 self._engine = None
                 self._config = None
+                import gc
+                gc.collect()
     
     def is_initialized(self) -> bool:
         """
