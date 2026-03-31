@@ -4,9 +4,9 @@
 # 获取脚本所在目录
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# 创建符号链接 vllm_backend -> vllm-backend (Python不支持模块名含连字符)
-if [ ! -L "$SCRIPT_DIR/vllm_backend" ] && [ -d "$SCRIPT_DIR/vllm-backend" ]; then
-    ln -s "$SCRIPT_DIR/vllm-backend" "$SCRIPT_DIR/vllm_backend"
+# 创建符号链接 vllm -> vllm-backend (vllm-backend内部使用from vllm import)
+if [ ! -L "$SCRIPT_DIR/vllm" ] && [ -d "$SCRIPT_DIR/vllm-backend" ]; then
+    ln -s "$SCRIPT_DIR/vllm-backend" "$SCRIPT_DIR/vllm"
 fi
 
 # 设置PYTHONPATH
