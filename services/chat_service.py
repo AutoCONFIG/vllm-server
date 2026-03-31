@@ -8,7 +8,7 @@ import json
 from typing import AsyncGenerator, Optional, Dict, Any, List
 
 from fastapi import HTTPException
-from vllm import SamplingParams
+from vllm_backend.vllm import SamplingParams
 
 from core import engine_manager, EngineNotInitializedError
 
@@ -215,7 +215,7 @@ class ChatService:
         Returns:
             List: 渲染后的 engine prompts
         """
-        from vllm.renderers import ChatParams
+        from vllm_backend.vllm.renderers import ChatParams
         
         engine = engine_manager.engine
         renderer = engine.renderer

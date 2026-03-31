@@ -5,7 +5,7 @@
 
 from typing import Optional, Dict, Any
 
-from vllm import AsyncEngineArgs
+from vllm_backend.vllm import AsyncEngineArgs
 
 
 def build_engine_args(
