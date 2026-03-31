@@ -61,6 +61,18 @@ def setup_logging(
     access_logger.addHandler(file_handler)
     access_logger.setLevel(log_level)
     
+    # 配置 vllm 的日志
+    vllm_logger = logging.getLogger("vllm")
+    vllm_logger.addHandler(console_handler)
+    vllm_logger.addHandler(file_handler)
+    vllm_logger.setLevel(log_level)
+    
+    # 配置 services 的日志（自定义服务层）
+    services_logger = logging.getLogger("services")
+    services_logger.addHandler(console_handler)
+    services_logger.addHandler(file_handler)
+    services_logger.setLevel(log_level)
+    
     print(f"[INFO] Logging configured: {log_file_path}")
 
 

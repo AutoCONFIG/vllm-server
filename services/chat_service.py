@@ -5,12 +5,15 @@
 
 import time
 import json
+import logging
 from typing import AsyncGenerator, Optional, Dict, Any, List
 
 from fastapi import HTTPException
 from vllm.sampling_params import SamplingParams
 
 from core import engine_manager, EngineNotInitializedError
+
+logger = logging.getLogger(__name__)
 
 
 class ChatService:
@@ -217,6 +220,15 @@ class ChatService:
         """
         from vllm.renderers.params import ChatParams
         
+        logger.debug(f"[DEBUG] _render_messages: num_messages={len(messages)}")
+        logger.debug(f"[DEBUG] messages[0] role={messages[0].get('role') if messages else None}")
+        if messages and 'content' in messages[0]:
+            content = messages[0]['content']
+            if isinstance(content, list):
+                logger.debug(f"[DEBUG] First message has {len(content)} content parts")
+                for i, part in enumerate(content[:3]):  # 只打印前3个part
+                    logger.debug(f"[DEBUG] content[{i}] type={part.get('type') if isinstance(part, dict) else type(part).__name__}")
+        
         engine = engine_manager.engine
         renderer = engine.renderer
         
@@ -225,10 +237,22 @@ class ChatService:
             media_io_kwargs=request.get("media_io_kwargs"),
             mm_processor_kwargs=request.get("mm_processor_kwargs"),
         )
+        logger.debug(f"[DEBUG] ChatParams: media_io_kwargs={chat_params.media_io_kwargs}, mm_processor_kwargs={chat_params.mm_processor_kwargs}")
         
         _, engine_prompts = await renderer.render_chat_async(
             conversations=[messages],
             chat_params=chat_params,
         )
+        
+        logger.debug(f"[DEBUG] render_chat_async done: num_prompts={len(engine_prompts)}")
+        if engine_prompts:
+            prompt = engine_prompts[0]
+            logger.debug(f"[DEBUG] First prompt has keys={list(prompt.keys()) if isinstance(prompt, dict) else type(prompt).__name__}")
+            if isinstance(prompt, dict):
+                if 'multi_modal_data' in prompt:
+                    mm_data = prompt['multi_modal_data']
+                    logger.debug(f"[DEBUG] multi_modal_data keys={list(mm_data.keys()) if mm_data else None}")
+                if 'prompt_token_ids' in prompt:
+                    logger.debug(f"[DEBUG] prompt_token_ids length={len(prompt['prompt_token_ids'])}")
         
         return engine_prompts
