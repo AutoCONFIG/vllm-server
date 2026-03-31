@@ -4,9 +4,10 @@
 # 获取脚本所在目录
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# 创建符号链接 vllm -> vllm-backend (vllm-backend内部使用from vllm import)
-if [ ! -L "$SCRIPT_DIR/vllm" ] && [ -d "$SCRIPT_DIR/vllm-backend" ]; then
-    ln -s "$SCRIPT_DIR/vllm-backend" "$SCRIPT_DIR/vllm"
+# 确保vllm-backend以可编辑模式安装
+if ! python -c "import vllm" 2>/dev/null; then
+    echo "[INFO] Installing vllm-backend in editable mode..."
+    VLLM_USE_PRECOMPILED=1 pip install -e "$SCRIPT_DIR/vllm-backend" --no-build-isolation -q
 fi
 
 # 设置PYTHONPATH
