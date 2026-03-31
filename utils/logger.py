@@ -64,6 +64,34 @@ def setup_logging(
     print(f"[INFO] Logging configured: {log_file_path}")
 
 
+def _truncate_media_data(data: Any, max_len: int = 30) -> Any:
+    """
+    截断媒体数据（图片/视频的base64或URL），只保留前后一小段
+    
+    Args:
+        data: 要处理的数据
+        max_len: 截断后的最大长度（前后各保留的字符数）
+    
+    Returns:
+        处理后的数据
+    """
+    if isinstance(data, dict):
+        result = {}
+        for key, value in data.items():
+            result[key] = _truncate_media_data(value, max_len)
+        return result
+    elif isinstance(data, list):
+        return [_truncate_media_data(item, max_len) for item in data]
+    elif isinstance(data, str):
+        lower_key_hints = ['image', 'video', 'audio', 'url']
+        if any(hint in str(data).lower() for hint in lower_key_hints) and len(data) > max_len * 2:
+            if data.startswith('data:') or len(data) > 1000:
+                return f"{data[:max_len]}...<truncated {len(data)} chars>...{data[-max_len:]}"
+        return data
+    else:
+        return data
+
+
 def log_request(
     log_dir: str,
     request_log_file: str = "api_requests.log",
@@ -82,8 +110,8 @@ def log_request(
     try:
         log_entry: Dict[str, Any] = {
             "timestamp": datetime.now().isoformat(),
-            "request": request_data,
-            "response": response_data,
+            "request": _truncate_media_data(request_data) if request_data else None,
+            "response": _truncate_media_data(response_data) if response_data else None,
         }
         
         # 确保日志目录存在
