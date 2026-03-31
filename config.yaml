@@ -236,12 +236,12 @@ logging:
   #   - "ERROR": 错误
   #   - "CRITICAL": 严重错误
   # 默认: "INFO"
-  level: "INFO"
+  level: "DEBUG"
   
   # 记录所有API请求
   # 可选值: true, false
   # 默认: false
-  log_requests: false
+  log_requests: true
   
   # 日志目录
   log_dir: "logs"
