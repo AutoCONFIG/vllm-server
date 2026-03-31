@@ -6,7 +6,7 @@
 import asyncio
 from typing import Optional
 
-from vllm_backend.vllm import AsyncLLMEngine
+from vllm_backend.vllm.engine.async_llm_engine import AsyncLLMEngine
 
 
 class EngineNotInitializedError(Exception):
