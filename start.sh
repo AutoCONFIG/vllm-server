@@ -7,6 +7,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # 设置PYTHONPATH
 export PYTHONPATH="$SCRIPT_DIR/vllm-backend:$SCRIPT_DIR:$PYTHONPATH"
 
+echo "PYTHONPATH: $PYTHONPATH"
+
 # 启动服务器
 cd "$SCRIPT_DIR"
 python server.py --config "$SCRIPT_DIR/config.yaml" "$@"
