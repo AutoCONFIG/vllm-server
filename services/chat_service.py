@@ -209,7 +209,7 @@ class ChatService:
         request: Dict[str, Any],
     ) -> List[Any]:
         """
-        使用 vllm Renderer 渲染消息
+        使用 vllM Renderer 渲染消息
 
         Args:
             messages: OpenAI 格式的消息列表
@@ -218,41 +218,90 @@ class ChatService:
         Returns:
             List: 渲染后的 engine prompts
         """
-        from vllm.renderers.params import ChatParams
+        from vllm.renderers.params import ChatParams, TokenizeParams
+        from vllm.renderers import merge_kwargs
+        from vllm.entrypoints.chat_utils import resolve_chat_template_content_format
         
         logger.debug(f"[DEBUG] _render_messages: num_messages={len(messages)}")
-        logger.debug(f"[DEBUG] messages[0] role={messages[0].get('role') if messages else None}")
-        if messages and 'content' in messages[0]:
-            content = messages[0]['content']
-            if isinstance(content, list):
-                logger.debug(f"[DEBUG] First message has {len(content)} content parts")
-                for i, part in enumerate(content[:3]):  # 只打印前3个part
-                    logger.debug(f"[DEBUG] content[{i}] type={part.get('type') if isinstance(part, dict) else type(part).__name__}")
         
         engine = engine_manager.engine
         renderer = engine.renderer
+        model_config = engine.model_config
         
+        # 获取 tokenizer
+        tokenizer = renderer.get_tokenizer()
+        
+        # 构建 chat_params（参考 OpenAIServingRender.preprocess_chat）
+        content_format = resolve_chat_template_content_format(
+            chat_template=request.get("chat_template"),
+            tools=None,
+            given_format=None,
+            tokenizer=tokenizer,
+            model_config=model_config,
+        )
+        
+        # 构建 tokenize params
+        tok_params = TokenizeParams()
+        
+        # 构建 chat params，包括 media_io_kwargs 和 mm_processor_kwargs
+        mm_config = model_config.multimodal_config
         chat_params = ChatParams(
             chat_template=request.get("chat_template"),
-            media_io_kwargs=request.get("media_io_kwargs"),
-            mm_processor_kwargs=request.get("mm_processor_kwargs"),
-        )
-        logger.debug(f"[DEBUG] ChatParams: media_io_kwargs={chat_params.media_io_kwargs}, mm_processor_kwargs={chat_params.mm_processor_kwargs}")
-        
-        _, engine_prompts = await renderer.render_chat_async(
-            conversations=[messages],
-            chat_params=chat_params,
+            chat_template_content_format=content_format,
+        ).with_defaults(
+            default_template_kwargs=None,
+            default_media_io_kwargs=(mm_config.media_io_kwargs if mm_config else None),
+            default_mm_processor_kwargs=request.get("mm_processor_kwargs"),
         )
         
-        logger.debug(f"[DEBUG] render_chat_async done: num_prompts={len(engine_prompts)}")
-        if engine_prompts:
-            prompt = engine_prompts[0]
-            logger.debug(f"[DEBUG] First prompt has keys={list(prompt.keys()) if isinstance(prompt, dict) else type(prompt).__name__}")
-            if isinstance(prompt, dict):
-                if 'multi_modal_data' in prompt:
-                    mm_data = prompt['multi_modal_data']
-                    logger.debug(f"[DEBUG] multi_modal_data keys={list(mm_data.keys()) if mm_data else None}")
-                if 'prompt_token_ids' in prompt:
-                    logger.debug(f"[DEBUG] prompt_token_ids length={len(prompt['prompt_token_ids'])}")
+        # 合并请求中的 media_io_kwargs
+        if request.get("media_io_kwargs"):
+            # 手动合并 media_io_kwargs
+            current_kwargs = chat_params.media_io_kwargs or {}
+            request_kwargs = request["media_io_kwargs"]
+            
+            # 合并所有模态的 kwargs
+            for modality, kwargs in request_kwargs.items():
+                if modality in current_kwargs:
+                    current_kwargs[modality].update(kwargs)
+                else:
+                    current_kwargs[modality] = kwargs
+            
+            # 创建新的 chat_params
+            chat_params = ChatParams(
+                chat_template=chat_params.chat_template,
+                chat_template_content_format=chat_params.chat_template_content_format,
+                chat_template_kwargs=chat_params.chat_template_kwargs,
+                media_io_kwargs=current_kwargs,
+                mm_processor_kwargs=chat_params.mm_processor_kwargs,
+            )
         
-        return engine_prompts
+        logger.debug(f"[DEBUG] ChatParams: media_io_kwargs={chat_params.media_io_kwargs}")
+        logger.debug(f"[DEBUG] ChatParams: mm_processor_kwargs={chat_params.mm_processor_kwargs}")
+        
+        # 构建 prompt_extras（关键！）
+        prompt_extras = {}
+        if request.get("mm_processor_kwargs"):
+            prompt_extras["mm_processor_kwargs"] = request["mm_processor_kwargs"]
+        
+        # 调用 render_chat_async（完整的参数）
+        (conversation,), (engine_prompt,) = await renderer.render_chat_async(
+            [messages],
+            chat_params,
+            tok_params,  # 添加 tok_params
+            prompt_extras=prompt_extras if prompt_extras else None,  # 添加 prompt_extras
+        )
+        
+        logger.debug(f"[DEBUG] render_chat_async done")
+        logger.debug(f"[DEBUG] engine_prompt keys={list(engine_prompt.keys())}")
+        
+        if "multi_modal_data" in engine_prompt:
+            mm_data = engine_prompt["multi_modal_data"]
+            logger.debug(f"[DEBUG] ✅ multi_modal_data keys={list(mm_data.keys()) if mm_data else None}")
+        else:
+            logger.debug(f"[DEBUG] ❌ multi_modal_data NOT in engine_prompt!")
+        
+        if "prompt_token_ids" in engine_prompt:
+            logger.debug(f"[DEBUG] prompt_token_ids length={len(engine_prompt['prompt_token_ids'])}")
+        
+        return [engine_prompt]
