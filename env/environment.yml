@@ -1,0 +1,32 @@
+name: vllm
+channels:
+  - nvidia/label/cuda-12.8.1
+  - nvidia
+  - bioconda
+  - conda-forge
+  - defaults
+dependencies:
+  - cmake
+  - cuda-toolkit=12.8.1
+  - ffmpeg
+  - pip
+  - python=3.12
+  - pip:
+    - cuda-toolkit[all]==12.8.1
+    - ffmpeg-python
+    - joblib
+    - matplotlib
+    - opencv-python
+    - pandas
+    - pillow
+    - psutil
+    - pyransac3d
+    - requests
+    - scikit-image
+    - scikit-learn
+    - scipy
+    - seaborn
+    - tqdm
+    - yacs
+
+# VLLM_USE_PRECOMPILED=1 pip install -e ./vllm-backend -v
