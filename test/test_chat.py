@@ -17,7 +17,7 @@ import time
 from pathlib import Path
 
 # ============ 配置项，请根据实际调整 =============
-BASE_URL = "http://36.155.152.28:31002/v1"
+BASE_URL = "http://localhost:8000/v1"
 API_KEY = "token-abc123"
 MODEL_NAME = "qwen3-vl"
 

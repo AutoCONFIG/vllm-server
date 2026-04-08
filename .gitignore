@@ -8,6 +8,8 @@ __pycache__/
 *.swo
 *~
 
+*.pyc
+
 # Logs
 logs/
 *.log

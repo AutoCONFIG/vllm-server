@@ -30,7 +30,7 @@ model:
   
   # 模型权重路径（必需）
   # 支持本地模型目录或HuggingFace模型ID
-  path: "/root/bayes-tmp/qwen3_vl"
+  path: "/home/yun/qwen3.5"
   
   # 模型计算精度
   # 可选值:
@@ -90,7 +90,7 @@ engine:
   #   - null/空: 使用所有GPU
   #   - "0": 仅GPU 0
   #   - "0,1,2,3": GPU 0,1,2,3
-  gpu_ids: "0,1,2,3"
+  gpu_ids: "0"
   
   # 最大模型长度（token数）
   # 可选值: 正整数
@@ -116,7 +116,7 @@ engine:
   # 可选值: 1 - GPU数量
   # 说明: 将模型层拆分到多张GPU
   # 参考: docs/vllm/docs/configuration/optimization.md#tensor-parallelism-tp
-  tensor_parallel_size: 4
+  tensor_parallel_size: 1
   
   # 流水线并行大小 (Pipeline Parallelism, PP)
   # 可选值: 1 - GPU数量 / tensor_parallel_size

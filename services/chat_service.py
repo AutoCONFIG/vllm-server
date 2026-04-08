@@ -220,7 +220,7 @@ class ChatService:
         """
         from vllm.renderers.params import ChatParams, TokenizeParams
         from vllm.renderers import merge_kwargs
-        from vllm.entrypoints.chat_utils import resolve_chat_template_content_format
+        from vllm.renderers.hf import resolve_chat_template_content_format
         
         logger.debug(f"[DEBUG] _render_messages: num_messages={len(messages)}")
         
@@ -241,7 +241,7 @@ class ChatService:
         )
         
         # 构建 tokenize params
-        tok_params = TokenizeParams()
+        tok_params = TokenizeParams(max_total_tokens=model_config.max_model_len)
         
         # 构建 chat params，包括 media_io_kwargs 和 mm_processor_kwargs
         mm_config = model_config.multimodal_config
@@ -249,7 +249,7 @@ class ChatService:
             chat_template=request.get("chat_template"),
             chat_template_content_format=content_format,
         ).with_defaults(
-            default_template_kwargs=None,
+            default_chat_template_kwargs=None,
             default_media_io_kwargs=(mm_config.media_io_kwargs if mm_config else None),
             default_mm_processor_kwargs=request.get("mm_processor_kwargs"),
         )
@@ -294,13 +294,34 @@ class ChatService:
         
         logger.debug(f"[DEBUG] render_chat_async done")
         logger.debug(f"[DEBUG] engine_prompt keys={list(engine_prompt.keys())}")
-        
+        logger.debug(f"[DEBUG] engine_prompt type={engine_prompt.get('type')}")
+
         if "multi_modal_data" in engine_prompt:
             mm_data = engine_prompt["multi_modal_data"]
             logger.debug(f"[DEBUG] ✅ multi_modal_data keys={list(mm_data.keys()) if mm_data else None}")
         else:
-            logger.debug(f"[DEBUG] ❌ multi_modal_data NOT in engine_prompt!")
-        
+            logger.debug(f"[DEBUG] ❌ multi_modal_data NOT in engine_prompt (checking mm_kwargs instead)")
+
+        # Check for processed multimodal data (MultiModalInputs)
+        if "mm_kwargs" in engine_prompt:
+            mm_kwargs = engine_prompt["mm_kwargs"]
+            logger.debug(f"[DEBUG] ✅ mm_kwargs keys={list(mm_kwargs.keys()) if mm_kwargs else None}")
+            for k, v in (mm_kwargs.items() if mm_kwargs else []):
+                if hasattr(v, 'shape'):
+                    logger.debug(f"[DEBUG]   mm_kwargs[{k}].shape={v.shape}")
+                elif isinstance(v, list) and len(v) > 0:
+                    logger.debug(f"[DEBUG]   mm_kwargs[{k}] is list, len={len(v)}, first_item_type={type(v[0]).__name__}")
+                else:
+                    logger.debug(f"[DEBUG]   mm_kwargs[{k}]={type(v).__name__}")
+
+        if "mm_hashes" in engine_prompt:
+            mm_hashes = engine_prompt["mm_hashes"]
+            logger.debug(f"[DEBUG] mm_hashes keys={list(mm_hashes.keys()) if mm_hashes else None}")
+
+        if "mm_placeholders" in engine_prompt:
+            mm_placeholders = engine_prompt["mm_placeholders"]
+            logger.debug(f"[DEBUG] mm_placeholders keys={list(mm_placeholders.keys()) if mm_placeholders else None}")
+
         if "prompt_token_ids" in engine_prompt:
             logger.debug(f"[DEBUG] prompt_token_ids length={len(engine_prompt['prompt_token_ids'])}")
         
