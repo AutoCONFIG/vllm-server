@@ -30,7 +30,7 @@ model:
   
   # 模型权重路径（必需）
   # 支持本地模型目录或HuggingFace模型ID
-  path: "/home/yun/qwen3.5"
+  path: "/media/yun/de2a43ce-446c-4a62-99b3-8ddc6ea1ef87/vllm/qwen3.5"
   
   # 模型计算精度
   # 可选值:
